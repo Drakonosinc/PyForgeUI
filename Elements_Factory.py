@@ -9,4 +9,6 @@ class ElementsFactory:
         self.sound_touch=config.get("sound_touch",None)
     def create_Text(self,config:dict):
         return Text({"screen": self.screen,"font": self.font,"color": self.color,"hover_color": self.hover_color,**config})
+    def create_TextButton(self,config:dict):
+        return TextButton({"screen": self.screen,"font": self.font,"color": self.color,"hover_color": self.hover_color,"sound_hover": self.sound_hover,"sound_touch": self.sound_touch,**config})
     
