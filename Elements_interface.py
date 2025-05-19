@@ -1,8 +1,5 @@
 import pygame
 from pygame.locals import *
-
-    def create_ScrollBar(self,config:dict):
-        return ScrollBar({"screen": self.screen,"color": self.color,"hover_color": self.hover_color,"sound_hover": self.sound_hover,"sound_touch": self.sound_touch,**config})
 class ElementBehavior:
     def __init__(self, config: dict):
         self.sound_hover = config.get("sound_hover")
