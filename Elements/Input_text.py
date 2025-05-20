@@ -13,4 +13,8 @@ class Input_text(ElementBehavior):
         self.border_color=config.get("border_color",(127,127,127))
         self.border=config.get("border",2)
         self.rect = pygame.Rect(*self.position)
+    def change_text(self,event):
+        if self.states["active"] and event.type==KEYDOWN:
+            if event.key == K_BACKSPACE:self.text=self.text[:-1]
+            else:self.text+=event.unicode
     

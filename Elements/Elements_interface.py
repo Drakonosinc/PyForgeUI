@@ -1,10 +1,6 @@
 import pygame
 from pygame.locals import *
 
-    def change_text(self,event):
-        if self.states["active"] and event.type==KEYDOWN:
-            if event.key == K_BACKSPACE:self.text=self.text[:-1]
-            else:self.text+=event.unicode
     def draw(self):
         pygame.draw.rect(self.screen,self.color_back,self.rect)
         if self.detect_mouse:self.mouse_collision(self.rect,pygame.mouse.get_pos())
