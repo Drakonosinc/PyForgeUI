@@ -1,0 +1,19 @@
+class ComboBox(ElementBehavior):
+    def __init__(self, config: dict):
+        ElementBehavior.__init__(self, config)
+        self.screen = config["screen"]
+        self.position = config["position"]
+        self.dropdown = config.get("size", (100, 200))
+        self.type_dropdown = self.icon_dropdown(config.get("type_dropdown", "down"))
+        self.color = config.get("color", (255, 255, 255))
+        self.elements = None
+        self.rect = pygame.Rect(*self.position)
+        self.rect_dropdown = pygame.Rect(*self.position,*self.dropdown)
+    def icon_dropdown(self,type_dropdown):
+        match type_dropdown:
+            case "down":return "V"
+            case "up":return "Λ"
+            case "right":return ">"
+            case "left":return "<"
+    def events(self, event):pass
+    
