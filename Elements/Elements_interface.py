@@ -1,7 +1,5 @@
 import pygame
 from pygame.locals import *
-
-    def show_player(self):return self.text
 class ScrollBar(ElementBehavior):
     def __init__(self, config: dict):
         super().__init__(config)
