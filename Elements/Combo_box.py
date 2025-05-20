@@ -16,4 +16,7 @@ class ComboBox(ElementBehavior):
             case "right":return ">"
             case "left":return "<"
     def events(self, event):pass
+    def draw(self):
+        if self.detect_mouse:self.mouse_collision(self.rect,pygame.mouse.get_pos())
+        if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
     
