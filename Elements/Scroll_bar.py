@@ -13,3 +13,15 @@ class ScrollBar(ElementBehavior):
         self.elements = None
         self.dragging = False
         self.drag_offset = 0
+    def events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.thumb_rect.collidepoint(event.pos):
+                self.dragging = True
+                self.drag_offset = event.pos[1] - self.thumb_rect.y
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:self.dragging = False
+        elif event.type == pygame.MOUSEMOTION and self.dragging:
+            new_y = event.pos[1] - self.drag_offset
+            new_y = max(self.rect.top, min(new_y, self.rect.bottom - self.thumb_height))
+            self.thumb_rect.y = new_y
+            self.scroll_elements()
+    
