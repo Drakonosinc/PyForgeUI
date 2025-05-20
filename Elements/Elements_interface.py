@@ -1,15 +1,5 @@
 import pygame
 from pygame.locals import *
-
-    def update_elements(self, elements: list):
-        if self.elements is None:
-            self.elements = elements
-            self.initial_positions = [(el.position[0], el.position[1]) for el in self.elements]
-            if self.elements:
-                top = min(y for _, y in self.initial_positions)
-                bottom = max(el.rect.bottom for el in self.elements)
-                self.content_height = bottom - top
-            else:self.content_height = self.rect.height
 class Combo_Box(ElementBehavior):
     def __init__(self, config: dict):
         ElementBehavior.__init__(self, config)

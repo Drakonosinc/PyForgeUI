@@ -40,4 +40,12 @@ class ScrollBar(ElementBehavior):
         if self.detect_mouse:self.mouse_collision(self.thumb_rect,pygame.mouse.get_pos())
         if self.pressed:self.pressed_button(self.thumb_rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
     def draw_hover_effect(self):return pygame.draw.rect(self.screen, self.hover_color, self.thumb_rect)
-    
+    def update_elements(self, elements: list):
+        if self.elements is None:
+            self.elements = elements
+            self.initial_positions = [(el.position[0], el.position[1]) for el in self.elements]
+            if self.elements:
+                top = min(y for _, y in self.initial_positions)
+                bottom = max(el.rect.bottom for el in self.elements)
+                self.content_height = bottom - top
+            else:self.content_height = self.rect.height
