@@ -2,9 +2,6 @@ import pygame
 from pygame.locals import *
 
     
-    def new_events(self,time):
-        self.EVENT_NEW = pygame.USEREVENT + self.define_event()
-        pygame.time.set_timer(self.EVENT_NEW,time)
     def define_event(self):return 1
     def reactivate_pressed(self,event):
         if event.type==self.EVENT_NEW:self.states["presses_touch"]=True
