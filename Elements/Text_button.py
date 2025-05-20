@@ -5,4 +5,7 @@ class TextButton(Text,ElementBehavior):
     def draw(self):
         super().draw()
         if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
-    
+    def change_item(self,config:dict):
+        super().change_item(config)
+        self.detect_mouse=config.get("detect_mouse",self.detect_mouse)
+        self.pressed=config.get("pressed",self.pressed)

@@ -1,10 +1,7 @@
 import pygame
 from pygame.locals import *
 
-    def change_item(self,config:dict):
-        super().change_item(config)
-        self.detect_mouse=config.get("detect_mouse",self.detect_mouse)
-        self.pressed=config.get("pressed",self.pressed)
+
 class PolygonButton(ElementBehavior):
     def __init__(self,config:dict):
         super().__init__(config)
