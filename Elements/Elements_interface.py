@@ -1,10 +1,6 @@
 import pygame
 from pygame.locals import *
 
-    def change_item(self,config:dict):
-        self.position = config.get("position",self.position)
-        self.color=config.get("color",self.color)
-        self.text=config.get("text",self.text)
 class TextButton(Text,ElementBehavior):
     def __init__(self,config:dict):
         Text.__init__(self, config)
