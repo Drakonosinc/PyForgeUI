@@ -1,12 +1,7 @@
 import pygame
 from pygame.locals import *
 
-    
-    def execute_commands(self):
-        try:
-            for command in self.commands:
-                if callable(command):command()
-        except TypeError:return None
+
 class Text:
     def __init__(self,config:dict):
         self.screen = config["screen"]

@@ -34,4 +34,8 @@ class ElementBehavior:
                 self.states["click_time"] = None
                 self.states["presses_touch"] = True
                 self.execute_commands()
-    
+    def execute_commands(self):
+        try:
+            for command in self.commands:
+                if callable(command):command()
+        except TypeError:return None
