@@ -17,4 +17,10 @@ class Input_text(ElementBehavior):
         if self.states["active"] and event.type==KEYDOWN:
             if event.key == K_BACKSPACE:self.text=self.text[:-1]
             else:self.text+=event.unicode
+    def draw(self):
+        pygame.draw.rect(self.screen,self.color_back,self.rect)
+        if self.detect_mouse:self.mouse_collision(self.rect,pygame.mouse.get_pos())
+        if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
+        input_player=pygame.draw.rect(self.screen,self.border_color,self.rect,self.border)
+        self.screen.blit(self.font.render(self.text, True, self.color), (input_player.x+5, input_player.y-2))
     
