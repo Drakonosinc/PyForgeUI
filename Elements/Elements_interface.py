@@ -2,18 +2,6 @@ import pygame
 from pygame.locals import *
 
     
-    def pressed_button(self,rect,pressed_mouse,mouse_pos):
-        current_time = pygame.time.get_ticks()
-        if pressed_mouse[0] and rect.collidepoint(mouse_pos) and self.states["presses_touch"]:
-            self.states["active"]=True
-            self.states["presses_touch"]=False
-            self.states["click_time"] = current_time
-        if self.states["click_time"] is not None:
-            if current_time - self.states["click_time"] >= 200:
-                if self.sound_touch:self.sound_touch.play(loops=0)
-                self.states["click_time"] = None
-                self.states["presses_touch"] = True
-                self.execute_commands()
     def execute_commands(self):
         try:
             for command in self.commands:
