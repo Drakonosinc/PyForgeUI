@@ -2,7 +2,6 @@ import pygame
 from pygame.locals import *
 
     
-    def define_event(self):return 1
     def reactivate_pressed(self,event):
         if event.type==self.EVENT_NEW:self.states["presses_touch"]=True
     def draw_hover_effect(self):raise NotImplementedError
