@@ -1,3 +1,4 @@
+from Elements import *
 class ElementsFactory:
     def __init__(self,config:dict):
         self.screen=config["screen"]
