@@ -1,6 +1,5 @@
 import pygame
 from pygame.locals import *
-    def draw_hover_effect(self):pass
     def pressed_button(self,rect,pressed_mouse,mouse_pos):
         super().pressed_button(rect,pressed_mouse,mouse_pos)
         if pressed_mouse[0] and not rect.collidepoint(mouse_pos):self.states["active"],self.states["presses_touch"]=False,True
