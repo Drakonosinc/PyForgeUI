@@ -34,4 +34,9 @@ class ScrollBar(ElementBehavior):
             el.position = (x0, new_y)
             el.rect.y = new_y
         if callable(self.commands):self.commands(proportion)
+    def draw(self):
+        pygame.draw.rect(self.screen, self.color, self.rect)
+        pygame.draw.rect(self.screen, self.color_thumb, self.thumb_rect)
+        if self.detect_mouse:self.mouse_collision(self.thumb_rect,pygame.mouse.get_pos())
+        if self.pressed:self.pressed_button(self.thumb_rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
     
