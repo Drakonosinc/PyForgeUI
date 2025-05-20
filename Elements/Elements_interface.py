@@ -2,7 +2,6 @@ import pygame
 from pygame.locals import *
 
     
-    def draw_hover_effect(self):raise NotImplementedError
     def mouse_collision(self,rect,mouse_pos,draw=None):
         if rect.collidepoint(mouse_pos):
             self.draw_hover_effect() if draw is None else draw()
