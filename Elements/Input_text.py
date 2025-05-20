@@ -1,4 +1,4 @@
-class Input_text(ElementBehavior):
+class InputText(ElementBehavior):
     def __init__(self,config:dict):
         super().__init__(config)
         self.screen = config["screen"]
