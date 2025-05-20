@@ -1,7 +1,6 @@
 import pygame
 from pygame.locals import *
 
-    def draw_hover_effect(self):return self.screen.blit(self.font.render(self.text,True,self.hover_color),self.position)
     def change_item(self,config:dict):
         self.position = config.get("position",self.position)
         self.color=config.get("color",self.color)
