@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
+
     
-    def events(self, event):pass
     def new_events(self,time):
         self.EVENT_NEW = pygame.USEREVENT + self.define_event()
         pygame.time.set_timer(self.EVENT_NEW,time)
