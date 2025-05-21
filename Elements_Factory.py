@@ -1,3 +1,4 @@
+import pygame
 from Elements import *
 class ElementsFactory:
     def __init__(self,config:dict):
