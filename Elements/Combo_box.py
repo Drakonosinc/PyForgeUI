@@ -3,6 +3,8 @@ class ComboBox(ElementBehavior):
     def __init__(self, config: dict):
         ElementBehavior.__init__(self, config)
         self.screen = config["screen"]
+        self.font = config.get("font", pygame.font.Font(None, 25))
+        self.text = config.get("text","")
         self.position = config["position"]
         self.dropdown = config.get("size", (100, 200))
         self.type_dropdown = self.icon_dropdown(config.get("type_dropdown", "down"))
