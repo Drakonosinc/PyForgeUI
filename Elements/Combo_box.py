@@ -1,3 +1,4 @@
+from ..Behavior.Element_behavior import *
 class ComboBox(ElementBehavior):
     def __init__(self, config: dict):
         ElementBehavior.__init__(self, config)
