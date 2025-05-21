@@ -1,4 +1,5 @@
 from ..Behavior.Element_behavior import *
+from ..Elements.Text import Text
 class TextButton(Text,ElementBehavior):
     def __init__(self,config:dict):
         Text.__init__(self, config)
