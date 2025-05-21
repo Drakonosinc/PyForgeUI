@@ -1,3 +1,4 @@
+from ..Behavior.Element_behavior import *
 class Text:
     def __init__(self,config:dict):
         self.screen = config["screen"]
