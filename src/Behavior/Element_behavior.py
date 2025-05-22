@@ -12,7 +12,7 @@ class ElementBehavior:
     def define_event(self):return 1
     def reactivate_pressed(self,event):
         if event.type==self.EVENT_NEW:self.states["presses_touch"]=True
-    def draw_hover_effect(self):raise NotImplementedError
+    
     def mouse_collision(self,rect,mouse_pos,draw=None):
         if rect.collidepoint(mouse_pos):
             self.draw_hover_effect() if draw is None else draw()
