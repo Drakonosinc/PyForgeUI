@@ -4,6 +4,7 @@ from ..Behavior import *
 class ElementBehavior(MouseCollision,PressedButton):
     def __init__(self, config: dict):
         MouseCollision.__init__(self, config)
+        PressedButton.__init__(self, config)
         self.states=config.get("states",{"detect_hover":True,"presses_touch":True,"click_time": None,"active":False})
         self.commands = [config.get(f"command{i}") for i in range(1,4)]
         self.new_events(time=config.get("time",500))
