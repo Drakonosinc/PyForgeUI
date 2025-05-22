@@ -1,4 +1,3 @@
-import pygame
 from pygame.locals import *
 from ..Behavior import *
 class ElementBehavior(MouseCollision,PressedButton):
