@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 from ..Behavior import *
-class ElementBehavior(MouseCollision):
+class ElementBehavior(MouseCollision,PressedButton):
     def __init__(self, config: dict):
         MouseCollision.__init__(self, config)
         self.states=config.get("states",{"detect_hover":True,"presses_touch":True,"click_time": None,"active":False})
