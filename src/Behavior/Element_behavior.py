@@ -12,14 +12,6 @@ class ElementBehavior:
     def define_event(self):return 1
     def reactivate_pressed(self,event):
         if event.type==self.EVENT_NEW:self.states["presses_touch"]=True
-    
-    def mouse_collision(self,rect,mouse_pos,draw=None):
-        if rect.collidepoint(mouse_pos):
-            self.draw_hover_effect() if draw is None else draw()
-            if self.states["detect_hover"]:
-                if self.sound_hover:self.sound_hover.play(loops=0)
-                self.states["detect_hover"]=False
-        else:self.states["detect_hover"]=True
     def pressed_button(self,rect,pressed_mouse,mouse_pos):
         current_time = pygame.time.get_ticks()
         if pressed_mouse[0] and rect.collidepoint(mouse_pos) and self.states["presses_touch"]:
