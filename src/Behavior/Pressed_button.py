@@ -10,3 +10,6 @@ class PressedButton:
             self.states["active"]=True
             self.states["presses_touch"]=False
             self.states["click_time"] = current_time
+        if self.states["click_time"] is not None:
+            if current_time - self.states["click_time"] >= 200:
+                if self.sound_touch:self.sound_touch.play(loops=0)
