@@ -18,6 +18,8 @@ class PressedButton:
                 self.states["click_time"] = None
                 self.states["presses_touch"] = True
                 self.execute_commands()
+        if pressed_mouse[0] and not rect.collidepoint(mouse_pos):self.states["active"],self.states["presses_touch"]=False,True
+        if self.states["active"]:pass
     def execute_commands(self):
         try:
             for command in self.commands:
