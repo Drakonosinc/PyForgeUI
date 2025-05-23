@@ -26,7 +26,5 @@ class InputText(ElementBehavior):
         self.screen.blit(self.font.render(self.text, True, self.color), (input_player.x+5, input_player.y-2))
     def draw_hover_effect(self):return pygame.draw.rect(self.screen,self.hover_color,self.rect)
     def pressed_button(self,rect,pressed_mouse,mouse_pos):
-        super().pressed_button(rect,pressed_mouse,mouse_pos)
-        if pressed_mouse[0] and not rect.collidepoint(mouse_pos):self.states["active"],self.states["presses_touch"]=False,True
-        if self.states["active"]:pygame.draw.rect(self.screen,self.pressed_color,self.rect)
+        pygame.draw.rect(self.screen,self.pressed_color,self.rect)
     def show_player(self):return self.text
