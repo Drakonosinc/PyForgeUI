@@ -11,4 +11,4 @@ class MouseCollision:
                 if self.sound_hover:self.sound_hover.play(loops=0)
                 self.states["detect_hover"]=False
         else:self.states["detect_hover"]=True
-    def rects_collision(self):pass
+    def rects_collision(self,**kwargs):pass
