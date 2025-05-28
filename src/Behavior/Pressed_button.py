@@ -4,7 +4,7 @@ class PressedButton:
         self.sound_touch = config.get("sound_touch")
         self.pressed = config.get("pressed",True)
         self.states=config.get("states",{"presses_touch":True,"click_time": None,"active":False})
-    def pressed_button(self,rect,pressed_mouse,mouse_pos):
+    def pressed_button(self,rect,pressed_mouse,mouse_pos,draw=None):
         current_time = pygame.time.get_ticks()
         if pressed_mouse[0] and rect.collidepoint(mouse_pos) and self.states["presses_touch"]:
             self.states["active"]=True
