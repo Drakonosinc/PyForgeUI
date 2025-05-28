@@ -17,7 +17,7 @@ class PressedButton:
                 self.states["presses_touch"] = True
                 self.execute_commands()
         if pressed_mouse[0] and not rect.collidepoint(mouse_pos):self.states["active"],self.states["presses_touch"]=False,True
-        if self.states["active"]:self.draw_pressed_effect()
+        if self.states["active"]:self.draw_pressed_effect() if draw is None else draw()
     def draw_pressed_effect(self):return NotImplementedError
     def execute_commands(self):
         try:
