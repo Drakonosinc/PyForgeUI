@@ -18,11 +18,11 @@ class ComboBox(ElementBehavior):
         match type_dropdown:
             case "down":return " V"
             case "up":return " Λ"
-            case "right":return ">"
-            case "left":return "<"
+            case "right":return " >"
+            case "left":return " <"
     def events(self, event):pass
     def draw(self):
-        self.screen.blit(self.font.render(f"{self.text} {self.type_dropdown}", True,self.color), (self.position))
+        self.screen.blit(self.font.render(f"{self.text}{self.type_dropdown}", True,self.color), (self.position))
         if self.detect_mouse:self.mouse_collision(self.rect,pygame.mouse.get_pos())
         if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),pygame.mouse.get_pos())
     def draw_hover_effect(self):pass
