@@ -33,7 +33,8 @@ class ScrollBar(ElementBehavior):
         for el, (x0, y0) in zip(self.elements, self.initial_positions):
             new_y = y0 - offset
             el.position = (x0, new_y)
-            el.rect.y = new_y
+            if isinstance(el.rect, dict):
+            
         if callable(self.commands):self.commands(proportion)
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect)
