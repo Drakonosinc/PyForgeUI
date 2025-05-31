@@ -51,7 +51,7 @@ class ScrollBar(ElementBehavior):
                 top = min(y for _, y in self.initial_positions)
                 bottom = self.return_rect()
                 self.content_height = bottom - top
-            else:self.content_height = self.rect.heigh
+            else:self.content_height = self.rect.height
     def return_rect(self):
         for el in self.elements:
             if isinstance(el.rect, dict):
