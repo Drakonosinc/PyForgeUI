@@ -31,6 +31,7 @@ class ComboBox(ElementBehavior):
     def draw_hover_effect1(self):return self.screen.blit(self.font.render(f"{self.text}{self.type_dropdown}", True,self.hover_color), (self.position))
     def draw_hover_effect2(self):return self.screen.blit(self.font.render(f"{self.type_dropdown}",True,self.hover_dropdown), (self.position[0]+self.font.size(self.text)[0], self.position[1]))
     def draw_pressed_effect1(self):pass
+    def draw_pressed_effect2(self):pass
     def charge_elements(self, elements: list):
         if self.elements is None:
             self.elements = elements
