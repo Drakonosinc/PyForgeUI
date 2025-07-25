@@ -1,4 +1,5 @@
 from ..Behavior.Element_behavior import *
+from ..Elements.Text_button import TextButton
 class ComboBox(TextButton):
     def __init__(self, config: dict):
         TextButton.__init__(self, config)
