@@ -27,7 +27,6 @@ class ComboBox(TextButton):
             case "left":return " <"
     def events(self, event):pass
     def draw(self):
-        super().draw()
         self.screen.blit(self.font.render(self.text, True,self.color),(self.position))
         self.button_dropdown.draw()
         if self.detect_mouse:self.mouse_collision(self.rect,pygame.mouse.get_pos(),self.draw_hover_effect)
