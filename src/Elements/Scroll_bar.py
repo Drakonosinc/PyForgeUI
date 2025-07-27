@@ -34,7 +34,12 @@ class ScrollBar(ElementBehavior):
             new_y = y0 - offset
             el.position = (x0, new_y)
             if isinstance(el.rect, dict):
-                for i in el.rect:el.rect[i].y = new_y
+                for key in el.rect:
+                    item = el.rect[key]
+                    if hasattr(item, 'y'):item.y = new_y
+                    elif hasattr(item, 'rect') and hasattr(item, 'position'):
+                        item.rect.y = new_y
+                        item.position = (item.position[0], new_y)
             else:el.rect.y = new_y
         if callable(self.commands):self.commands(proportion)
     def draw(self):
@@ -54,6 +59,5 @@ class ScrollBar(ElementBehavior):
             else:self.content_height = self.rect.height
     def return_rect(self):
         for el in self.elements:
-            if isinstance(el.rect, dict):
-                return max(el.rect.bottom for el in self.elements.values() if isinstance(el.rect, dict))
+            if isinstance(el.rect, dict):return max(el.rect.bottom for el in self.elements.values() if isinstance(el.rect, dict))
             else:return max(el.rect.bottom for el in self.elements if not isinstance(el.rect, dict))
