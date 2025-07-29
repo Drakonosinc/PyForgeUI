@@ -22,3 +22,55 @@ class ComboBox(TextButton):
             "command1": lambda: setattr(self, 'is_dropdown_open', not self.is_dropdown_open)})
         self.rect = {"button": pygame.Rect(*self.position, *self.font.size(self.text)),
                     "dropdown": self.button_dropdown}
+    def icon_dropdown(self,type_dropdown):
+        match type_dropdown:
+            case "down":return " V"
+            case "up":return " Λ"
+            case "right":return " >"
+            case "left":return " <"
+    def get_rect_dropdown(self):
+        match self.type_dropdown:
+            case " V":return pygame.Rect(self.position[0], self.position[1] + self.font.get_height(), *self.dropdown)
+            case " Λ":return None
+            case " >":return None
+            case " <":return None
+    def draw(self):
+        self.screen.blit(self.font.render(self.text, True,self.color),(self.position))
+        self.button_dropdown.draw()
+        if self.is_dropdown_open:self.draw_rect_dropdown()
+        else:self.button_dropdown.change_item({"color": self.color})
+        if self.detect_mouse:self.mouse_collision(self.rect["button"],pygame.mouse.get_pos(),self.draw_hover_effect)
+        if self.pressed:self.pressed_button(self.rect["button"],pygame.mouse.get_pressed(),pygame.mouse.get_pos())
+    def draw_hover_effect(self):return self.screen.blit(self.font.render(f"{self.text}{self.type_dropdown}", True,self.hover_color), (self.position))
+    def draw_rect_dropdown(self):
+        self.button_dropdown.change_item({"color": self.hover_dropdown})
+        self.dropdown_rect = self.get_rect_dropdown()
+        pygame.draw.rect(self.screen, self.hover_dropdown, self.dropdown_rect)
+        for button in self.option_buttons:button.draw()
+    def charge_elements(self, options: list[str]):
+        self.options = options
+        for i, option in enumerate(options):
+            x = self.position[0]
+            y = self.position[1] + self.font.get_height() + i * (self.font.get_height() + 5)
+            position = (x, y)
+            button = TextButton({
+                "screen": self.screen,
+                "font": self.font,
+                "color": self.color,
+                "hover_color": self.hover_color,
+                "position": position,
+                "text": option,
+                "command1": lambda idx=i: self.select_option(idx)})
+            self.option_buttons.append(button)
+        if options and not self.text:
+            self.text = options[0]
+            self.selected_index = 0
+    def select_option(self, index):
+        if 0 <= index < len(self.options):
+            self.text = self.options[index]
+            self.selected_index = index
+            self.is_dropdown_open = False
+    def events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect["dropdown"].collidepoint(event.pos):self.is_dropdown_open = not self.is_dropdown_open
+            elif self.is_dropdown_open and not self.dropdown_rect.collidepoint(event.pos):self.is_dropdown_open = False
