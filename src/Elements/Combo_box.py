@@ -1,5 +1,5 @@
 from ..Behavior.Element_behavior import *
-from ..Elements.Text_button import TextButton
+from ..Elements.Text_button import TextButton, ScrollBar
 class ComboBox(TextButton):
     def __init__(self, config: dict):
         super().__init__(config)
