@@ -7,18 +7,18 @@ class PressedButton:
         self.repeat = config.get("repeat_button",False)
         self.commands = [config.get(f"command{i}") for i in range(1,config.get("number_commands", 4))]
     def pressed_button(self,rect,pressed_mouse,mouse_pos,draw=None,repeat:bool = None):
+        def execute(sound = False, active = False, presses = True):
+            if sound and self.sound_touch:self.sound_touch.play(loops=0)
+            self.states["active"] = active
+            self.states["presses_touch"] = presses
+            self.states["click_time"] = None
+            self.execute_commands()
         repeat = self.repeat if repeat is None else repeat
         current_time = pygame.time.get_ticks()
         if pressed_mouse[0] and rect.collidepoint(mouse_pos) and self.states["presses_touch"]:
             self.states["active"]=True
             self.states["presses_touch"]=False
             self.states["click_time"] = current_time
-        def execute():
-            if self.sound_touch:self.sound_touch.play(loops=0)
-            self.states["active"] = False
-            self.states["click_time"] = None
-            self.states["presses_touch"] = True
-            self.execute_commands()
         if not repeat and not pressed_mouse[0] and self.states["active"]:
             if rect.collidepoint(mouse_pos):execute()
         elif self.states["click_time"] is not None and repeat:
