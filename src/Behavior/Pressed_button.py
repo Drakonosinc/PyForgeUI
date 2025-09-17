@@ -4,6 +4,7 @@ class PressedButton:
         self.sound_touch = config.get("sound_touch")
         self.pressed = config.get("pressed",True)
         self.states=config.get("states",{"presses_touch":True,"click_time": None,"active":False})
+        self.repeat = config.get("repeat_button",False)
         self.commands = [config.get(f"command{i}") for i in range(1,config.get("number_commands", 4))]
     def pressed_button(self,rect,pressed_mouse,mouse_pos,draw=None,repeat:bool = None):
         repeat = self.repeat if repeat is None else repeat
