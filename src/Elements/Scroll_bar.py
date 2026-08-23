@@ -17,9 +17,10 @@ class ScrollBar(ElementBehavior):
             if self.thumb_rect.collidepoint(event.pos):
                 self.dragging = True
 
-
             self.scroll_elements()
-    
+    def scroll_elements(self):
+        max_scroll = self.content_size
+
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
         pygame.draw.rect(self.screen, self.color_thumb, self.thumb_rect)
