@@ -7,7 +7,12 @@ class ScrollBar(ElementBehavior):
         self.hover_color = config.get("hover_color", (255, 199, 51))
         self.color = config.get("color", (200, 200, 200))
         self.color_thumb = config.get("color_bar", (135, 206, 235))
-
+        if self.type_of_orientation == "vertical":
+            self.thumb_size = config.get("thumb_height", max(20, int(self.position[3] * config.get("thumb_ratio", 0.2))))
+            self.thumb_rect = pygame.Rect(rect.x, rect.y, rect.width, self.thumb_size)
+        else:
+            self.thumb_size = config.get("thumb_width", max(20, int(self.position[2] * config.get("thumb_ratio", 0.2))))
+            self.thumb_rect = pygame.Rect(rect.x, rect.y, self.thumb_size, rect.height)
         self.elements = None
         self.dragging = False
         self.drag_offset = 0
