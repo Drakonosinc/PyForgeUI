@@ -33,6 +33,9 @@ class ScrollBar(ElementBehavior):
                 new_pos = max(self.rect["rect"].left, min(new_pos, self.rect["rect"].right - self.thumb_size))
                 self.thumb_rect.x = new_pos
             self.scroll_elements()
+    def scroll_elements(self):
+        max_scroll = self.content_size
+        if max_scroll == 0:  proportion = 0.0
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
