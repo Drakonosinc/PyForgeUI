@@ -40,6 +40,9 @@ class ScrollBar(ElementBehavior):
             if self.type_of_orientation == "vertical": proportion = (self.thumb_rect.y - self.rect["rect"].y) / (self.rect["rect"].height - self.thumb_size)
             else: proportion = (self.thumb_rect.x - self.rect["rect"].x) / (self.rect["rect"].width - self.thumb_size)
         offset = int(proportion * max_scroll)
+        for el, (x0, y0) in zip(self.elements, self.initial_positions):
+            if self.type_of_orientation == "vertical":
+                old_pos = el.position[1]
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
