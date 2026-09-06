@@ -48,6 +48,7 @@ class ScrollBar(ElementBehavior):
             else:
                 old_pos = el.position[0]
                 new_pos = x0 - offset
+                el.position = (new_pos, y0)
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
