@@ -53,6 +53,7 @@ class ScrollBar(ElementBehavior):
             def add_delta(item, delta):
                 if isinstance(item, pygame.Rect):
                     if self.type_of_orientation == "vertical": item.y += delta
+                    else: item.x += delta
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
