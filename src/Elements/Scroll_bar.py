@@ -62,6 +62,7 @@ class ScrollBar(ElementBehavior):
                     else: item.position = (item.position[0] + delta, item.position[1])
             if isinstance(el.rect, dict): 
                 for key in el.rect: add_delta(el.rect[key], delta)
+            else: add_delta(el.rect, delta)
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
