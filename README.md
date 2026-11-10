@@ -1,6 +1,6 @@
 # PyForgeUI
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Drakonosinc/PyForgeUI)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-4B32C3?logo=read-the-docs&logoColor=white)](https://deepwiki.com/Drakonosinc/PyForgeUI)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
