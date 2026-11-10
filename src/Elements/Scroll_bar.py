@@ -1,4 +1,5 @@
-from ..Behavior.Element_behavior import *
+import pygame
+from ..Behavior.Element_behavior import ElementBehavior
 class ScrollBar(ElementBehavior):
     def __init__(self, config: dict):
         super().__init__(config)
@@ -10,10 +11,13 @@ class ScrollBar(ElementBehavior):
         if self.type_of_orientation == "vertical":
             self.thumb_size = config.get("thumb_height", max(20, int(self.position[3] * config.get("thumb_ratio", 0.2))))
             self.thumb_rect = pygame.Rect(rect.x, rect.y, rect.width, self.thumb_size)
+            self.content_size = rect.height
         else:
             self.thumb_size = config.get("thumb_width", max(20, int(self.position[2] * config.get("thumb_ratio", 0.2))))
             self.thumb_rect = pygame.Rect(rect.x, rect.y, self.thumb_size, rect.height)
+            self.content_size = rect.width
         self.elements = None
+        self.initial_positions = []
         self.dragging = False
         self.drag_offset = 0
         self.rect = {"rect": rect, "thumb": self.thumb_rect} 
@@ -34,11 +38,17 @@ class ScrollBar(ElementBehavior):
                 self.thumb_rect.x = new_pos
             self.scroll_elements()
     def scroll_elements(self):
+        if not self.elements:
+            return
         max_scroll = self.content_size
         if max_scroll == 0:  proportion = 0.0
         else: 
-            if self.type_of_orientation == "vertical": proportion = (self.thumb_rect.y - self.rect["rect"].y) / (self.rect["rect"].height - self.thumb_size)
-            else: proportion = (self.thumb_rect.x - self.rect["rect"].x) / (self.rect["rect"].width - self.thumb_size)
+            if self.type_of_orientation == "vertical":
+                denom = self.rect["rect"].height - self.thumb_size
+                proportion = (self.thumb_rect.y - self.rect["rect"].y) / denom if denom > 0 else 0.0
+            else:
+                denom = self.rect["rect"].width - self.thumb_size
+                proportion = (self.thumb_rect.x - self.rect["rect"].x) / denom if denom > 0 else 0.0
         offset = int(proportion * max_scroll)
         for el, (x0, y0) in zip(self.elements, self.initial_positions):
             if self.type_of_orientation == "vertical":
@@ -63,7 +73,8 @@ class ScrollBar(ElementBehavior):
             if isinstance(el.rect, dict): 
                 for key in el.rect: add_delta(el.rect[key], delta)
             else: add_delta(el.rect, delta)
-        if hasattr(el, 'scroll') and isinstance(el.scroll, ScrollBar): el.scroll.initial_positions = [(sub_el.position[0], sub_el.position[1]) for sub_el in el.scroll.elements]
+            if hasattr(el, 'scroll') and isinstance(el.scroll, ScrollBar) and el.scroll.elements:
+                el.scroll.initial_positions = [(sub_el.position[0], sub_el.position[1]) for sub_el in el.scroll.elements]
         if callable(self.commands): self.commands(proportion)
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])

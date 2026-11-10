@@ -1,3 +1,3 @@
-from ..Behavior.Element_behavior import *
-from ..Behavior.Mouse_collision import *
-from ..Behavior.Pressed_button import *
+from .Mouse_collision import MouseCollision
+from .Pressed_button import PressedButton
+from .Element_behavior import ElementBehavior

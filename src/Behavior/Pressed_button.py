@@ -3,7 +3,9 @@ class PressedButton:
     def __init__(self,config: dict):
         self.sound_touch = config.get("sound_touch")
         self.pressed = config.get("pressed",True)
-        self.states=config.get("states",{"presses_touch":True,"click_time": None,"active":False})
+        if not hasattr(self, "states"):
+            self.states = {}
+        self.states.update({"presses_touch": True, "click_time": None, "active": False, **config.get("states", {})})
         self.repeat = config.get("repeat_button",False)
         self.commands = [config.get(f"command{i}") for i in range(1,config.get("number_commands", 4))]
     def pressed_button(self,rect,pressed_mouse,mouse_pos,draw=None,repeat:bool = None):

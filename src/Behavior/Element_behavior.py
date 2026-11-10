@@ -1,6 +1,9 @@
+import pygame
 from pygame.locals import *
-from ..Behavior import *
+from .Mouse_collision import MouseCollision
+from .Pressed_button import PressedButton
 class ElementBehavior(MouseCollision,PressedButton):
+    _timer_initialized = False
     def __init__(self, config: dict):
         MouseCollision.__init__(self, config)
         PressedButton.__init__(self, config)
@@ -11,7 +14,9 @@ class ElementBehavior(MouseCollision,PressedButton):
         if event.type==self.EVENT_NEW:self.states["presses_touch"]=True
     def new_events(self,time):
         self.EVENT_NEW = pygame.USEREVENT + self.define_event()
-        pygame.time.set_timer(self.EVENT_NEW,time)
+        if not ElementBehavior._timer_initialized or time != 500:
+            pygame.time.set_timer(self.EVENT_NEW,time)
+            ElementBehavior._timer_initialized = True
     def define_event(self):return 1
     def filter_rects_collision(self,rects: dict, mouse_pos, draws: list, option: bool=False):
         for rect, draw in zip(rects, draws):
