@@ -1,6 +1,7 @@
 # PyForgeUI
 
 [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-4B32C3?logo=read-the-docs&logoColor=white)](https://deepwiki.com/Drakonosinc/PyForgeUI)
+[![PyPI version](https://img.shields.io/pypi/v/pyforgeui.svg)](https://pypi.org/project/pyforgeui/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -23,7 +24,7 @@
 
 ## Installation
 
-### From PyPI (once published)
+### From PyPI
 ```bash
 pip install pyforgeui
 ```
