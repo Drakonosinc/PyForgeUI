@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyforgeui"
+version = "1.0.0"
+description = "A modular, zero-leak, game-ready GUI widget and container library built on top of Pygame."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Drakonosinc" }
+]
+keywords = ["pygame", "gui", "ui", "widgets", "gamedev", "interface", "hud", "menu"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: User Interfaces",
+]
+dependencies = [
+    "pygame>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Drakonosinc/PyForgeUI"
+Repository = "https://github.com/Drakonosinc/PyForgeUI"
+Documentation = "https://deepwiki.com/Drakonosinc/PyForgeUI"
+
+[tool.setuptools.packages.find]
+where = ["src"]
