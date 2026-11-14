@@ -220,6 +220,23 @@ class TestPyForgeUI(unittest.TestCase):
         self.assertEqual(counter[0], 8)
         btn_inc.pressed_button(btn_inc.rect, (False, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
 
+        # Test adaptive translucent live neural network renderer
+        RetroVisualFX.draw_live_neural_network(
+            self.screen,
+            (82, 86, 536, 262),
+            layers_sizes=[6, 6, 6, 6, 6, 2],
+            layer_activations=[
+                [0.1, 0.4, 0.8, 0.2, 0.9, 0.5],
+                [0.0, 0.7, 0.3, 1.0, 0.2, 0.6],
+                [0.8, 0.1, 0.5, 0.9, 0.4, 0.0],
+                [0.2, 0.9, 0.6, 0.1, 0.7, 0.3],
+                [0.5, 0.3, 0.8, 0.4, 1.0, 0.1],
+                [1.0, 0.0],
+            ],
+            opacity=115,
+            show_frame=True,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

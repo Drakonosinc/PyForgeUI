@@ -509,6 +509,164 @@ class RetroVisualFX:
                 screen.blit(halo_surf, (cx - halo_r - 2, cy - halo_r - 2))
                 btn.draw()
 
+    @classmethod
+    def draw_live_neural_network(
+        cls,
+        screen: pygame.Surface,
+        rect: pygame.Rect | tuple[int, int, int, int],
+        layers_sizes: list[int] | tuple[int, ...],
+        layer_activations: list | None = None,
+        accent_color=(56, 189, 248),
+        secondary_color=(168, 85, 247),
+        pulse_color=(255, 199, 51),
+        opacity: int = 120,
+        show_frame: bool = True,
+    ) -> None:
+        """
+        Draws a translucent, adaptive live neural network topology with real-time per-neuron
+        activations, glowing square scanlined nodes, circular neon halos, and active synapse pulses.
+        """
+        r = pygame.Rect(rect) if not isinstance(rect, pygame.Rect) else rect
+        if r.width <= 20 or r.height <= 20 or not layers_sizes or len(layers_sizes) < 2:
+            return
+
+        acc = cls.normalize_color(accent_color)
+        sec = cls.normalize_color(secondary_color)
+        pul = cls.normalize_color(pulse_color)
+
+        try:
+            ticks = pygame.time.get_ticks()
+        except Exception:
+            ticks = 0
+
+        panel = pygame.Surface((r.width, r.height), pygame.SRCALPHA)
+
+        if show_frame:
+            cls.draw_hud_frame(
+                panel,
+                (0, 0, r.width, r.height),
+                accent_color=sec,
+                bg_color=(8, 12, 26),
+                bg_alpha=68,
+                corner_size=12,
+                glow=True,
+            )
+
+        num_layers = len(layers_sizes)
+        pad_x = max(24, int(r.width * 0.06))
+        pad_y = max(14, int(r.height * 0.06))
+        left, right = pad_x, r.width - pad_x
+        top, bottom = pad_y, r.height - pad_y
+
+        x_positions = [
+            int(left + i * (right - left) / max(1, num_layers - 1))
+            for i in range(num_layers)
+        ]
+
+        layer_centers: list[list[tuple[int, int]]] = []
+        layer_node_sizes: list[int] = []
+        acts_per_layer: list[list[float]] = []
+
+        for l_idx, raw_n in enumerate(layers_sizes):
+            n_neurons = max(1, int(raw_n))
+            y_gap = (bottom - top) / (n_neurons + 1)
+            node_half = max(4, min(9, int(y_gap * 0.34)))
+            layer_node_sizes.append(node_half)
+            centers = [
+                (x_positions[l_idx], int(top + (i + 1) * y_gap))
+                for i in range(n_neurons)
+            ]
+            layer_centers.append(centers)
+
+            raw_acts = None
+            if layer_activations is not None and l_idx < len(layer_activations):
+                raw_acts = layer_activations[l_idx]
+
+            layer_vals: list[float] = []
+            if raw_acts is not None and len(raw_acts) > 0:
+                for i in range(n_neurons):
+                    if i < len(raw_acts):
+                        val = float(raw_acts[i])
+                        if math.isnan(val) or math.isinf(val):
+                            val = 0.0
+                        layer_vals.append(max(0.0, min(1.0, val)))
+                    else:
+                        layer_vals.append(0.2)
+            else:
+                for i in range(n_neurons):
+                    wave = 0.35 + 0.25 * math.sin(ticks * 0.003 + l_idx * 0.8 + i * 0.6)
+                    layer_vals.append(max(0.0, min(1.0, wave)))
+            acts_per_layer.append(layer_vals)
+
+        # 1. Draw synapses and real-time signal energy pulses
+        conn_idx = 0
+        for li in range(num_layers - 1):
+            c_left = layer_centers[li]
+            c_right = layer_centers[li + 1]
+            a_left = acts_per_layer[li]
+            a_right = acts_per_layer[li + 1]
+
+            for i, p1 in enumerate(c_left):
+                a1 = a_left[i]
+                for j, p2 in enumerate(c_right):
+                    a2 = a_right[j]
+                    signal = max(0.0, min(1.0, a1 * a2))
+                    grad_t = (li + (conn_idx % 7) / 7.0) / max(1, num_layers - 1)
+                    base_col = cls.lerp_color(acc, sec, grad_t)
+                    active_tint = pul if signal > 0.65 else (130, 235, 255)
+                    syn_col = cls.lerp_color(base_col, active_tint, signal * 0.55)
+                    syn_alpha = int(38 + 182 * signal)
+                    pygame.draw.line(panel, (*syn_col, syn_alpha), p1, p2, 2 if signal > 0.68 else 1)
+
+                    if signal > 0.08:
+                        speed = 0.0011 + 0.0007 * signal
+                        phase = ((ticks * speed) + (conn_idx * 0.17)) % 1.0
+                        px = int(p1[0] + (p2[0] - p1[0]) * phase)
+                        py = int(p1[1] + (p2[1] - p1[1]) * phase)
+                        p_alpha = int(90 + 165 * signal)
+                        p_radius = 3 if signal > 0.65 else 2
+                        pygame.draw.circle(panel, (*pul, p_alpha), (px, py), p_radius)
+
+                    conn_idx += 1
+
+        # 2. Draw neuron halos and scanlined square nodes reactive to activation level
+        for l_idx, centers in enumerate(layer_centers):
+            layer_ratio = l_idx / max(1, num_layers - 1)
+            base_node_col = cls.lerp_color(acc, sec, layer_ratio)
+            node_half = layer_node_sizes[l_idx]
+            acts = acts_per_layer[l_idx]
+            is_output_layer = l_idx == num_layers - 1
+
+            for n_idx, (cx, cy) in enumerate(centers):
+                act = acts[n_idx]
+                peak_col = pul if (is_output_layer and act > 0.55) else (110, 238, 255)
+                halo_col = cls.lerp_color(base_node_col, peak_col, act * 0.75)
+
+                halo_r = int(node_half + 4 + round(3 * act))
+                pygame.draw.circle(panel, (*halo_col, int(24 + 76 * act)), (cx, cy), halo_r)
+                pygame.draw.circle(panel, (*halo_col, int(70 + 150 * act)), (cx, cy), max(1, halo_r - 2), 1)
+
+                fill_col = cls.lerp_color((20, 32, 56), (245, 252, 255), act)
+                rim_col = cls.lerp_color(base_node_col, pul if (is_output_layer and act > 0.65) else (255, 255, 255), act)
+
+                sq_rect = pygame.Rect(cx - node_half, cy - node_half, node_half * 2, node_half * 2)
+                pygame.draw.rect(panel, (*fill_col, int(185 + 70 * act)), sq_rect)
+
+                scan_col = cls.lerp_color((12, 20, 38), (155, 215, 250), act)
+                for sy in range(sq_rect.top + 2, sq_rect.bottom - 1, 3):
+                    pygame.draw.line(
+                        panel,
+                        (*scan_col, int(145 + 85 * act)),
+                        (sq_rect.left + 1, sy),
+                        (sq_rect.right - 2, sy),
+                        1,
+                    )
+
+                pygame.draw.rect(panel, (*rim_col, int(195 + 60 * act)), sq_rect, 2)
+
+        panel.set_alpha(max(20, min(255, int(opacity))))
+        screen.blit(panel, r.topleft)
+
 
 class RetroBackdrop:
     """Reusable animated retro-modern backdrop with deep-space gradient, cyber grid, floating neon dust, and CRT vignette."""
