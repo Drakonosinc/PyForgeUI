@@ -1,21 +1,26 @@
 import pygame
+from ..Behavior.Mouse_collision import MouseCollision
 from .Text_button import TextButton
 from .Scroll_bar import ScrollBar
 
 
 class ComboBox(TextButton):
     def __init__(self, config: dict) -> None:
+        self._is_dropdown_open: bool = False
+        self._last_draw_tick: int = 0
+        self._last_toggle_tick: int = -1000
+        self._owner_popup = self
         super().__init__(config)
         from ..Elements_Factory import ElementsFactory
         self.type_dropdown: str = self.get_icon()
         self.dropdown: list[int] = config.get("size", [self.font.size(self.text)[0] + self.font.size(self.type_dropdown)[0], 100])
         self.hover_dropdown: tuple[int, int, int] = config.get("hover_dropdown", (135, 206, 235))
         self.replace_text: bool = config.get("replace_text", False)
+        self.close_on_select: bool = config.get("close_on_select", True)
         self.adapt_dropdown: bool = config.get("adapt_dropdown", True)
         self.draw_scroll: bool = config.get("draw_scroll", True)
         self.command_dropdown = config.get("command_dropdown", None)
         self.anim_height_dropdown: int = 0
-        self.is_dropdown_open: bool = False
         self.options: list[str] = []
         self.option_buttons: dict = {}
         self._last_layout_rect: pygame.Rect | None = None
@@ -35,14 +40,86 @@ class ComboBox(TextButton):
         self.button_dropdown = self.factory.create_TextButton({
             "position": (self.position[0] + self.font.size(self.text)[0], int(self.position[1])),
             "text": self.type_dropdown,
-            "command1": lambda: setattr(self, "is_dropdown_open", not self.is_dropdown_open),
+            "command1": self.toggle_dropdown,
             "command2": self.command_dropdown if callable(self.command_dropdown) else None,
         })
+        self.button_dropdown._owner_popup = self
+        if not any(callable(c) for c in self.commands):
+            self.commands = [self.toggle_dropdown]
+            if callable(self.command_dropdown):
+                self.commands.append(self.command_dropdown)
         self._combo_hover_surface = self.font.render(f"{self.text}{self.type_dropdown}", True, self.hover_color)
         self.rect: dict[str, object] = {
             "button": pygame.Rect(*self.position, *self.font.size(self.text)),
             "dropdown": self.button_dropdown,
         }
+
+    @property
+    def is_dropdown_open(self) -> bool:
+        return self._is_dropdown_open
+
+    @is_dropdown_open.setter
+    def is_dropdown_open(self, value: bool) -> None:
+        val = bool(value)
+        self._is_dropdown_open = val
+        if val:
+            try:
+                self._last_draw_tick = pygame.time.get_ticks()
+            except Exception:
+                self._last_draw_tick = 0
+            MouseCollision.set_active_popup(self)
+        else:
+            MouseCollision.clear_active_popup(self)
+
+    def toggle_dropdown(self) -> None:
+        try:
+            now = pygame.time.get_ticks()
+        except Exception:
+            now = 0
+        if (now - self._last_toggle_tick) < 40:
+            return
+        self._last_toggle_tick = now
+        if self._is_dropdown_open:
+            self.close_dropdown(block_click=True)
+        else:
+            self.is_dropdown_open = True
+            MouseCollision._popup_block_until_release = True
+            MouseCollision._popup_closed_tick = now
+
+    def close_dropdown(self, block_click: bool = True) -> None:
+        self._is_dropdown_open = False
+        self.anim_height_dropdown = 0
+        if hasattr(self, "button_dropdown"):
+            self.button_dropdown.change_item({"color": self.color})
+        MouseCollision.clear_active_popup(self, block_click=block_click)
+
+    def get_header_rect(self) -> pygame.Rect:
+        btn_rect = self.rect["button"] if isinstance(self.rect, dict) and "button" in self.rect else pygame.Rect(*self.position, 0, 0)
+        if hasattr(self, "button_dropdown") and isinstance(self.button_dropdown.rect, pygame.Rect):
+            return btn_rect.union(self.button_dropdown.rect)
+        return btn_rect.copy()
+
+    def get_dropdown_overlay_rect(self) -> pygame.Rect:
+        if self.adapt_dropdown and self.option_buttons:
+            self._adapt_size_dropdown()
+        base = self._get_target_dropdown_rect()
+        if hasattr(self, "scroll") and isinstance(self.scroll.rect, dict) and "rect" in self.scroll.rect:
+            return base.union(self.scroll.rect["rect"])
+        if self.is_vertical():
+            return pygame.Rect(base.x, base.y, base.width + 22, base.height)
+        return pygame.Rect(base.x, base.y, base.width, base.height + 22)
+
+    def get_total_interactive_rect(self) -> pygame.Rect:
+        header = self.get_header_rect()
+        if self._is_dropdown_open:
+            return header.union(self.get_dropdown_overlay_rect())
+        return header
+
+    def get_bounding_rect(self) -> pygame.Rect:
+        return self.get_header_rect()
+
+    def _get_target_dropdown_rect(self) -> pygame.Rect:
+        return pygame.Rect(int(self.position[0]), int(self.position[1] + self.font.get_height()), int(self.dropdown[0]), int(self.dropdown[1]))
 
     def _update_surfaces(self) -> None:
         self._text_surface = self.font.render(self.text, True, self.color)
@@ -110,11 +187,32 @@ class ComboBox(TextButton):
                 "color_bar": (135, 206, 235),
             })
 
+        self.scroll._owner_popup = self
+
     def draw(self) -> None:
+        if self._is_visual_occluded_by_popup(self.get_header_rect()):
+            self.states["is_hovered"] = False
+            self.states["active"] = False
+            return
         self.screen.blit(self._text_surface, self.position)
         self.button_dropdown.draw()
         if self.is_dropdown_open:
-            self.draw_rect_dropdown()
+            try:
+                self._last_draw_tick = pygame.time.get_ticks()
+            except Exception:
+                pass
+            if MouseCollision._active_popup is not self:
+                MouseCollision.set_active_popup(self)
+            mouse_pos = self.get_mouse_pos()
+            pressed_mouse = pygame.mouse.get_pressed()
+            if (
+                pressed_mouse[0]
+                and not MouseCollision._popup_block_until_release
+                and not self.get_total_interactive_rect().collidepoint(mouse_pos)
+            ):
+                self.close_dropdown(block_click=False)
+            else:
+                self.draw_rect_dropdown()
         else:
             self.anim_height_dropdown = 0
             self.button_dropdown.change_item({"color": self.color})
@@ -142,8 +240,21 @@ class ComboBox(TextButton):
             self._rebuild_scroll()
         for button in self._visible_buttons():
             self._draw_option_buttons(button)
-        if hasattr(self, "scroll"):
+        if hasattr(self, "scroll") and self._needs_scroll():
             self._draw_scroll()
+
+    def _needs_scroll(self) -> bool:
+        vis = self._visible_buttons()
+        if not vis or not hasattr(self, "dropdown_rect"):
+            return False
+        if not all(self._is_button_visible(b) for b in vis):
+            return True
+        if hasattr(self, "scroll"):
+            if self.is_vertical() and self.scroll.thumb_rect.y > self.scroll.rect["rect"].y:
+                return True
+            if not self.is_vertical() and self.scroll.thumb_rect.x > self.scroll.rect["rect"].x:
+                return True
+        return False
 
     def _draw_option_buttons(self, button: object) -> None:
         if self._is_button_visible(button):
@@ -168,6 +279,12 @@ class ComboBox(TextButton):
         self.draw_scroll = False
 
 
+    def _on_option_clicked(self, index: int) -> None:
+        if self.replace_text:
+            self._select_option(index)
+        elif self.close_on_select:
+            self.close_dropdown(block_click=True)
+
     def charge_elements(self, options: dict) -> None:
         self._last_layout_rect = None
         for i, (option, action) in enumerate(options.items()):
@@ -175,9 +292,10 @@ class ComboBox(TextButton):
             button = self.factory.create_TextButton({
                 "text": option,
                 "position": pos,
-                "command1": lambda idx=i: self._select_option(idx) if self.replace_text else None,
+                "command1": lambda idx=i: self._on_option_clicked(idx),
                 "command2": action if callable(action) else None,
             })
+            button._owner_popup = self
             self._last_layout_rect = button.rect
             self._repeat_charge(f"elements_{i}", option, button, i)
         if self.replace_text and self.text in self.option_buttons:
@@ -186,6 +304,7 @@ class ComboBox(TextButton):
     def charge_buttons(self, buttons: list, first: bool = False) -> None:
         self._last_layout_rect = None
         for i, button in enumerate(buttons):
+            button._owner_popup = self
             is_first = first if i == 0 else False
             button.position = self._check_buttons_position(i, button.text, is_first)
             if hasattr(button, "rect"):
@@ -198,6 +317,7 @@ class ComboBox(TextButton):
             self._repeat_charge(f"buttons_{i}", button.text, button, i)
 
     def _repeat_charge(self, key, text, button, i) -> None:
+        button._owner_popup = self
         self.option_buttons[text] = button
         self.rect[key] = button
         if text not in self.options:
@@ -212,7 +332,7 @@ class ComboBox(TextButton):
             self.option_buttons[self.options[index]].rect = pygame.Rect(*self.position, *self.font.size(self.text))
             self.button_dropdown.change_item({"position": (self.position[0] + self.font.size(self.text)[0], int(self.position[1]))})
             self.button_dropdown.rect = pygame.Rect(self.button_dropdown.position, self.font.size(self.button_dropdown.text))
-            self.is_dropdown_open = False
+            self.close_dropdown(block_click=True)
         self.charge_buttons([button for button in self.option_buttons.values() if button.text != self.text], True)
         self.adapt_dropdown = True
         self._adapt_size_dropdown()
@@ -273,6 +393,9 @@ class ComboBoxUp(ComboBox):
     def is_vertical(self) -> bool:
         return True
 
+    def _get_target_dropdown_rect(self) -> pygame.Rect:
+        return pygame.Rect(int(self.position[0]), int(self.position[1] - self.dropdown[1]), int(self.dropdown[0]), int(self.dropdown[1]))
+
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[1]:
             self.anim_height_dropdown = min(self.dropdown[1], self.anim_height_dropdown + max(1, self.dropdown[1] // 15))
@@ -314,6 +437,9 @@ class ComboBoxRight(ComboBox):
     def _dropdown_top_y(self) -> int:
         return int(self.position[1] - self.padding_y // 2)
 
+    def _get_target_dropdown_rect(self) -> pygame.Rect:
+        return pygame.Rect(self._dropdown_start_x(), self._dropdown_top_y(), int(self.dropdown[0]), int(self.dropdown[1]))
+
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[0]:
             self.anim_height_dropdown = min(self.dropdown[0], self.anim_height_dropdown + max(1, self.dropdown[0] // 15))
@@ -353,6 +479,9 @@ class ComboBoxLeft(ComboBox):
 
     def _dropdown_top_y(self) -> int:
         return int(self.position[1] - self.padding_y // 2)
+
+    def _get_target_dropdown_rect(self) -> pygame.Rect:
+        return pygame.Rect(int(self.position[0] - self.dropdown[0] - 4), self._dropdown_top_y(), int(self.dropdown[0]), int(self.dropdown[1]))
 
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[0]:

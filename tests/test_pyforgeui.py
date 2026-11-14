@@ -101,6 +101,68 @@ class TestPyForgeUI(unittest.TestCase):
         self.assertTrue(ui.events(click))
         self.assertEqual(spn.get_value(), 5)  # Blocked by modal!
 
+    def test_combobox_occlusion_and_mutual_exclusion(self) -> None:
+        underneath_clicked = []
+        option_clicked = []
+
+        cb_top = self.factory.create_ComboBox({
+            "position": (10, 100),
+            "text": "Training",
+            "type_dropdown": "down",
+        })
+        cb_top.charge_elements({
+            "Genetic": lambda: option_clicked.append("Genetic"),
+            "Q-learning": lambda: option_clicked.append("Q-learning"),
+        })
+
+        cb_bottom = self.factory.create_ComboBox({
+            "position": (10, 130),
+            "text": "Model",
+            "type_dropdown": "down",
+        })
+        cb_bottom.charge_elements({"Pytorch": None, "Tensorflow": None})
+
+        btn_under = self.factory.create_TextButton({
+            "position": (10, 155),
+            "text": "AI parameters",
+            "command1": lambda: underneath_clicked.append(True),
+        })
+
+        # Open bottom first, then open top -> bottom must auto-close!
+        cb_bottom.is_dropdown_open = True
+        self.assertTrue(cb_bottom.is_dropdown_open)
+        cb_top.is_dropdown_open = True
+        self.assertTrue(cb_top.is_dropdown_open)
+        self.assertFalse(cb_bottom.is_dropdown_open)
+
+        # Draw enough frames to expand cb_top
+        for _ in range(15):
+            cb_top.draw()
+            cb_bottom.draw()
+            btn_under.draw()
+
+        # Verify btn_under and cb_bottom are occluded by cb_top's open dropdown
+        self.assertTrue(btn_under._is_visual_occluded_by_popup(btn_under.rect))
+        self.assertTrue(cb_bottom._is_visual_occluded_by_popup(cb_bottom.get_header_rect()))
+
+        # Attempting to click btn_under while cb_top is open must be blocked
+        overlap_pos = (btn_under.rect.centerx, btn_under.rect.centery)
+        btn_under.pressed_button(btn_under.rect, (True, False, False), overlap_pos, draw=lambda: None)
+        btn_under.pressed_button(btn_under.rect, (False, False, False), overlap_pos, draw=lambda: None)
+        self.assertEqual(len(underneath_clicked), 0)
+
+        # Selecting an option in cb_top closes cb_top and blocks same-frame click-through
+        q_btn = cb_top.return_buttons("Q-learning")
+        q_pos = (q_btn.rect.centerx, q_btn.rect.centery)
+        q_btn.pressed_button(q_btn.rect, (True, False, False), q_pos, draw=lambda: None)
+        q_btn.pressed_button(q_btn.rect, (False, False, False), q_pos, draw=lambda: None)
+        self.assertEqual(option_clicked, ["Q-learning"])
+        self.assertFalse(cb_top.is_dropdown_open)
+
+        # Immediate click check on btn_under on the same frame must also be blocked
+        btn_under.pressed_button(btn_under.rect, (False, False, False), overlap_pos, draw=lambda: None)
+        self.assertEqual(len(underneath_clicked), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

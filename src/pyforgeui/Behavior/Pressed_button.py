@@ -25,6 +25,11 @@ class PressedButton:
     def pressed_button(self, rect: pygame.Rect, pressed_mouse: tuple, mouse_pos: tuple[int, int], draw=None, repeat: bool | None = None) -> bool:
         if not getattr(self, "visible", True) or not getattr(self, "enabled", True):
             return False
+        if hasattr(self, "_is_occluded_by_popup") and self._is_occluded_by_popup(rect, mouse_pos):
+            self.states["active"] = False
+            self.states["presses_touch"] = True
+            self.states["click_time"] = None
+            return False
 
         fired = False
 
