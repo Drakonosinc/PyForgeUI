@@ -20,6 +20,22 @@ class Text(MouseCollision):
             if "active" in self.states:
                 self.states["active"] = False
             return
+        vp = getattr(self, "_scroll_viewport", None)
+        if isinstance(vp, pygame.Rect):
+            if isinstance(self.rect, pygame.Rect) and not vp.colliderect(self.rect):
+                self.states["is_hovered"] = False
+                if "active" in self.states:
+                    self.states["active"] = False
+                return
+            prev_clip = self.screen.get_clip()
+            self.screen.set_clip(vp)
+            try:
+                self.screen.blit(self._text_surface, self.position)
+                if self.detect_mouse:
+                    self.mouse_collision(self.rect, self.get_mouse_pos(), self.draw_hover_effect)
+            finally:
+                self.screen.set_clip(prev_clip)
+            return
         self.screen.blit(self._text_surface, self.position)
         if self.detect_mouse:self.mouse_collision(self.rect,self.get_mouse_pos(),self.draw_hover_effect)
     def draw_hover_effect(self):return self.screen.blit(self._hover_surface, self.position)

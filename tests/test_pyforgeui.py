@@ -85,9 +85,8 @@ class TestPyForgeUI(unittest.TestCase):
         consumed = sb.events(wheel_down)
         self.assertTrue(consumed)
         self.assertLess(items[0].position[1], initial_y)
-        # Item 0 scrolled above scroll_area.top (100) must be hidden and disabled
-        self.assertFalse(items[0].visible)
-        self.assertFalse(items[0].enabled)
+        # Item 0 scrolled above scroll_area.top (100) must be occluded from mouse clicks
+        self.assertTrue(items[0]._is_occluded_by_popup(items[0].rect, (110, 95)))
 
     def test_containers_and_uimanager(self) -> None:
         ui = self.factory.create_UIManager()

@@ -92,6 +92,13 @@ class MouseCollision:
                     return True
 
         if popup is None or is_owned_by_active:
+            vp = getattr(self, "_scroll_viewport", None)
+            if isinstance(vp, pygame.Rect):
+                if mouse_pos is not None and not vp.collidepoint(mouse_pos):
+                    return True
+                rect_to_check = check_rect if isinstance(check_rect, pygame.Rect) else self.get_bounding_rect()
+                if isinstance(rect_to_check, pygame.Rect) and (rect_to_check.top < vp.top or rect_to_check.bottom > vp.bottom):
+                    return True
             return False
         if getattr(self, "screen", None) is not getattr(popup, "screen", None):
             return False

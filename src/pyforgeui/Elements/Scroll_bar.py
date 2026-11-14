@@ -22,11 +22,6 @@ class ScrollBar(ElementBehavior):
             self.content_size = rect.width
         self.elements = None
         self.initial_positions = []
-        self._element_groups: list[list] = []
-        self.viewport_top: int = rect.top
-        self.viewport_bottom: int = rect.bottom
-        self.viewport_left: int = rect.left
-        self.viewport_right: int = rect.right
         self.dragging = False
         self.drag_offset = 0
         self.rect = {"rect": rect, "thumb": self.thumb_rect}
@@ -161,76 +156,23 @@ class ScrollBar(ElementBehavior):
                 add_delta(el.rect, delta)
             if hasattr(el, "scroll") and isinstance(el.scroll, ScrollBar) and el.scroll.elements:
                 el.scroll.initial_positions = [(sub_el.position[0], sub_el.position[1]) for sub_el in el.scroll.elements]
-        self._update_elements_visibility()
         if callable(self.commands):
             self.commands(proportion)
 
-    def _get_element_rect(self, el) -> pygame.Rect:
-        if hasattr(el, "get_bounding_rect"):
-            return el.get_bounding_rect()
-        r = getattr(el, "rect", None)
-        if isinstance(r, pygame.Rect):
-            return r
-        return pygame.Rect(int(el.position[0]), int(el.position[1]), 10, 10)
-
-    def _build_element_groups(self) -> None:
-        self._element_groups = []
-        if not self.elements:
-            return
-        used = [False] * len(self.elements)
-        rects = [self._get_element_rect(el) for el in self.elements]
-        for i, el in enumerate(self.elements):
-            if used[i]:
-                continue
-            used[i] = True
-            group = [el]
-            g_top, g_bottom = rects[i].top, rects[i].bottom
-            g_left, g_right = rects[i].left, rects[i].right
-            changed = True
-            while changed:
-                changed = False
-                for j, other in enumerate(self.elements):
-                    if used[j]:
-                        continue
-                    rj = rects[j]
-                    if self.type_of_orientation == "vertical":
-                        # Same horizontal row if vertical spans overlap
-                        if rj.top < g_bottom + 2 and g_top < rj.bottom + 2:
-                            used[j] = True
-                            group.append(other)
-                            g_top = min(g_top, rj.top)
-                            g_bottom = max(g_bottom, rj.bottom)
-                            changed = True
-                    else:
-                        if rj.left < g_right + 2 and g_left < rj.right + 2:
-                            used[j] = True
-                            group.append(other)
-                            g_left = min(g_left, rj.left)
-                            g_right = max(g_right, rj.right)
-                            changed = True
-            self._element_groups.append(group)
-
-    def _update_elements_visibility(self) -> None:
-        if not self.elements:
-            return
-        if not self._element_groups:
-            self._build_element_groups()
-        for group in self._element_groups:
-            rects = [self._get_element_rect(el) for el in group]
+    def get_viewport_rect(self) -> pygame.Rect | None:
+        if not self.initial_positions or not self.screen:
+            return None
+        scr_w, scr_h = self.screen.get_size()
+        if isinstance(self.scroll_area, pygame.Rect):
             if self.type_of_orientation == "vertical":
-                g_top = min(r.top for r in rects)
-                g_bottom = max(r.bottom for r in rects)
-                in_view = (g_top >= self.viewport_top - 2) and (g_bottom <= self.viewport_bottom + 4)
-            else:
-                g_left = min(r.left for r in rects)
-                g_right = max(r.right for r in rects)
-                in_view = (g_left >= self.viewport_left - 2) and (g_right <= self.viewport_right + 4)
-            for el in group:
-                el.visible = in_view
-                el.enabled = in_view
-                if not in_view and hasattr(el, "states") and isinstance(el.states, dict):
-                    el.states["is_hovered"] = False
-                    el.states["active"] = False
+                return pygame.Rect(0, self.scroll_area.top, scr_w, self.scroll_area.height)
+            return pygame.Rect(self.scroll_area.left, 0, self.scroll_area.width, scr_h)
+        if self.type_of_orientation == "vertical":
+            top = int(min(y for _, y in self.initial_positions)) - 2
+            return pygame.Rect(0, top, scr_w, max(1, scr_h - top))
+        else:
+            left = int(min(x for x, _ in self.initial_positions)) - 2
+            return pygame.Rect(left, 0, max(1, scr_w - left), scr_h)
 
     def draw(self):
         pygame.draw.rect(self.screen, self.color, self.rect["rect"])
@@ -250,32 +192,18 @@ class ScrollBar(ElementBehavior):
             if self.type_of_orientation == "vertical":
                 start_pos = min(y for _, y in self.initial_positions)
                 end_pos = self.return_rect()
-                if isinstance(self.scroll_area, pygame.Rect):
-                    self.viewport_top = self.scroll_area.top
-                    self.viewport_bottom = self.scroll_area.bottom
-                else:
-                    self.viewport_top = int(start_pos) - 2
-                    scr_h = self.screen.get_height() if self.screen else self.rect["rect"].bottom
-                    self.viewport_bottom = max(self.rect["rect"].bottom, scr_h - 55)
-                visible_span = max(40, self.viewport_bottom - self.viewport_top)
-                self.content_size = max(0, (end_pos - start_pos) - visible_span + 16)
+                visible_span = self.rect["rect"].height
             else:
                 start_pos = min(x for x, _ in self.initial_positions)
                 end_pos = self.return_rect()
-                if isinstance(self.scroll_area, pygame.Rect):
-                    self.viewport_left = self.scroll_area.left
-                    self.viewport_right = self.scroll_area.right
-                else:
-                    self.viewport_left = int(start_pos) - 2
-                    scr_w = self.screen.get_width() if self.screen else self.rect["rect"].right
-                    self.viewport_right = max(self.rect["rect"].right, scr_w - 20)
-                visible_span = max(40, self.viewport_right - self.viewport_left)
-                self.content_size = max(0, (end_pos - start_pos) - visible_span + 16)
-            self._build_element_groups()
-            self._update_elements_visibility()
+                visible_span = self.rect["rect"].width
+            self.content_size = max(0, (end_pos - start_pos) - visible_span + 24)
+            vp = self.get_viewport_rect()
+            for el in self.elements:
+                if getattr(el, "_owner_popup", None) is None:
+                    el._scroll_viewport = vp
         else:
             self.content_size = 0
-            self._element_groups = []
 
     def return_rect(self):
         def get_bound(val):
