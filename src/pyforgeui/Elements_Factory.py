@@ -3,14 +3,16 @@ try:
     from .Elements import *
     from .Containers import *
     from .UI_Manager import UIManager
+    from .VisualFX import RetroVisualFX, RetroBackdrop
 except ImportError:
     from Elements import *
     from Containers import *
     from UI_Manager import UIManager
+    from VisualFX import RetroVisualFX, RetroBackdrop
 
 
 class ElementsFactory:
-    """Centralized factory for creating themed PyForgeUI widgets and containers."""
+    """Centralized factory for creating themed PyForgeUI widgets, containers, and retro-modern visual effects."""
 
     def __init__(self, config: dict) -> None:
         self.screen = config["screen"]
@@ -21,6 +23,7 @@ class ElementsFactory:
         self.color_back = config.get("color_back", (255, 255, 255))
         self.sound_hover = config.get("sound_hover", None)
         self.sound_touch = config.get("sound_touch", None)
+        self.modern_style = config.get("modern_style", True)
 
     def _base_config(self, config: dict, include_font: bool = True, include_sounds: bool = True) -> dict:
         base = {
@@ -28,6 +31,7 @@ class ElementsFactory:
             "window": self.window,
             "color": self.color,
             "hover_color": self.hover_color,
+            "modern_style": self.modern_style,
         }
         if include_font:
             base["font"] = self.font
@@ -118,3 +122,14 @@ class ElementsFactory:
     def create_UIManager(self, config: dict | None = None) -> UIManager:
         cfg = {"screen": self.screen, "window": self.window, "font": self.font, **(config or {})}
         return UIManager(cfg)
+
+    def create_Backdrop(self, config: dict | None = None) -> RetroBackdrop:
+        cfg = config or {}
+        w, h = self.screen.get_size()
+        return RetroBackdrop(
+            width=cfg.get("width", w),
+            height=cfg.get("height", h),
+            accent_color=cfg.get("accent_color", (56, 189, 248)),
+            secondary_color=cfg.get("secondary_color", (168, 85, 247)),
+            num_particles=cfg.get("num_particles", 38),
+        )

@@ -1,5 +1,6 @@
 import pygame
 from ..Behavior.Element_behavior import ElementBehavior
+from ..VisualFX import RetroVisualFX
 
 
 class ScrollBar(ElementBehavior):
@@ -9,21 +10,23 @@ class ScrollBar(ElementBehavior):
         self.type_of_orientation = config.get("type_of_orientation", "vertical").lower()
         self.hover_color = config.get("hover_color", (255, 199, 51))
         self.color = config.get("color", (200, 200, 200))
-        self.color_thumb = config.get("color_bar", (135, 206, 235))
+        self.color_thumb = config.get("color_bar", (56, 189, 248))
+        self.modern_style: bool = config.get("modern_style", True)
         self.wheel_step = config.get("wheel_step", 18)
         self.scroll_area: pygame.Rect | None = config.get("scroll_area", None)
         if self.type_of_orientation == "vertical":
-            self.thumb_size = config.get("thumb_height", max(20, int(self.position[3] * config.get("thumb_ratio", 0.2))))
+            self.thumb_size = config.get("thumb_height", max(24, int(self.position[3] * config.get("thumb_ratio", 0.2))))
             self.thumb_rect = pygame.Rect(rect.x, rect.y, rect.width, self.thumb_size)
             self.content_size = rect.height
         else:
-            self.thumb_size = config.get("thumb_width", max(20, int(self.position[2] * config.get("thumb_ratio", 0.2))))
+            self.thumb_size = config.get("thumb_width", max(24, int(self.position[2] * config.get("thumb_ratio", 0.2))))
             self.thumb_rect = pygame.Rect(rect.x, rect.y, self.thumb_size, rect.height)
             self.content_size = rect.width
         self.elements = None
         self.initial_positions = []
         self.dragging = False
         self.drag_offset = 0
+        self._hover_anim: float = 0.0
         self.rect = {"rect": rect, "thumb": self.thumb_rect}
 
     def move(self, dx: int, dy: int) -> None:
@@ -175,14 +178,67 @@ class ScrollBar(ElementBehavior):
             return pygame.Rect(left, 0, max(1, scr_w - left), scr_h)
 
     def draw(self):
-        pygame.draw.rect(self.screen, self.color, self.rect["rect"])
-        pygame.draw.rect(self.screen, self.color_thumb, self.thumb_rect)
+        track = self.rect["rect"]
+        thumb = self.thumb_rect
+        mouse_pos = self.get_mouse_pos()
+
+        if self.modern_style:
+            is_hovered = (
+                self.dragging
+                or (
+                    self.detect_mouse
+                    and not self._is_occluded_by_popup(thumb, mouse_pos)
+                    and thumb.collidepoint(mouse_pos)
+                )
+            )
+            target = 1.0 if is_hovered else 0.0
+            if abs(self._hover_anim - target) > 0.01:
+                self._hover_anim += (target - self._hover_anim) * 0.3
+            else:
+                self._hover_anim = target
+
+            rad = max(4, min(track.width, track.height) // 2)
+            # Recessed dark-glass track
+            track_surf = pygame.Surface((track.width, track.height), pygame.SRCALPHA)
+            pygame.draw.rect(track_surf, (10, 16, 32, 210), track_surf.get_rect(), border_radius=rad)
+            pygame.draw.rect(track_surf, (45, 78, 125, 165), track_surf.get_rect(), 1, border_radius=rad)
+            self.screen.blit(track_surf, track.topleft)
+
+            # Glowing pill thumb
+            base_c = RetroVisualFX.normalize_color(self.color_thumb)
+            hov_c = RetroVisualFX.normalize_color(self.hover_color)
+            thumb_c = RetroVisualFX.lerp_color(base_c, hov_c, self._hover_anim)
+
+            pad = 4
+            t_surf = pygame.Surface((thumb.width + pad * 2, thumb.height + pad * 2), pygame.SRCALPHA)
+            local_t = pygame.Rect(pad, pad, thumb.width, thumb.height)
+            if self._hover_anim > 0.02:
+                pygame.draw.rect(t_surf, (*thumb_c, int(85 * self._hover_anim)), local_t.inflate(4, 4), border_radius=rad + 2)
+            pygame.draw.rect(t_surf, (*thumb_c, 235), local_t.inflate(-2, -2), border_radius=rad)
+            pygame.draw.rect(t_surf, (*RetroVisualFX.brighten(thumb_c, 45), 255), local_t.inflate(-2, -2), 1, border_radius=rad)
+
+            # Grip lines in center of thumb
+            cx, cy = local_t.centerx, local_t.centery
+            if self.type_of_orientation == "vertical" and thumb.height >= 16:
+                for dy in (-3, 0, 3):
+                    pygame.draw.line(t_surf, (10, 16, 32, 190), (cx - 4, cy + dy), (cx + 4, cy + dy), 1)
+            elif self.type_of_orientation != "vertical" and thumb.width >= 16:
+                for dx in (-3, 0, 3):
+                    pygame.draw.line(t_surf, (10, 16, 32, 190), (cx + dx, cy - 4), (cx + dx, cy + 4), 1)
+
+            self.screen.blit(t_surf, (thumb.x - pad, thumb.y - pad))
+        else:
+            pygame.draw.rect(self.screen, self.color, track)
+            pygame.draw.rect(self.screen, self.color_thumb, thumb)
+
         if self.detect_mouse:
-            self.mouse_collision(self.thumb_rect, self.get_mouse_pos())
+            self.mouse_collision(thumb, mouse_pos)
         if self.pressed:
-            self.pressed_button(self.thumb_rect, pygame.mouse.get_pressed(), self.get_mouse_pos())
+            self.pressed_button(thumb, pygame.mouse.get_pressed(), mouse_pos)
 
     def draw_hover_effect(self):
+        if self.modern_style:
+            return self.thumb_rect
         return pygame.draw.rect(self.screen, self.hover_color, self.thumb_rect)
 
     def update_elements(self, elements: list):

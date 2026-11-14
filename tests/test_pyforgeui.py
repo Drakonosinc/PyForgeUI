@@ -6,7 +6,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pygame
-from pyforgeui import ElementsFactory, UIManager
+from pyforgeui import ElementsFactory, UIManager, RetroVisualFX, RetroBackdrop
 
 
 class TestPyForgeUI(unittest.TestCase):
@@ -164,6 +164,35 @@ class TestPyForgeUI(unittest.TestCase):
         # Immediate click check on btn_under on the same frame must also be blocked
         btn_under.pressed_button(btn_under.rect, (False, False, False), overlap_pos, draw=lambda: None)
         self.assertEqual(len(underneath_clicked), 0)
+
+    def test_retro_modern_visual_fx_and_backdrop(self) -> None:
+        backdrop = self.factory.create_Backdrop()
+        backdrop.draw_background(self.screen, show_grid=True, show_particles=True)
+        RetroVisualFX.draw_hud_frame(self.screen, (40, 40, 280, 180), header_line_y=75)
+        title_rect = RetroVisualFX.draw_neon_title(self.screen, self.factory.font, "Space Pong", (60, 50))
+        self.assertGreater(title_rect.width, 0)
+        RetroVisualFX.draw_status_badge(self.screen, self.factory.font, "AI: LISTA", (10, 720))
+
+        # Test PolygonButton with position2 and color2 (hollow dark-glass style)
+        poly = self.factory.create_PolygonButton({
+            "color": (0, 0, 0),
+            "color2": (255, 255, 255),
+            "position": ((320, 185), (320, 205), (300, 195)),
+            "position2": ((320, 180), (320, 210), (295, 195)),
+        })
+        self.assertEqual(poly.outline_color, (255, 255, 255))
+        self.assertEqual(poly.hover_position, ((320, 180), (320, 210), (295, 195)))
+        poly.draw()
+
+        # Test InputText auto dark-glass conversion and stepper button badge
+        inp = self.factory.create_InputText({"text": "Player", "color": (0, 0, 0), "position": (8, 40, 271, 25)})
+        self.assertEqual(inp.color, (235, 248, 255))
+        inp.states["active"] = True
+        inp.draw()
+
+        stepper = self.factory.create_TextButton({"text": "<", "position": (500, 200)})
+        stepper.draw()
+        backdrop.draw_post_overlay(self.screen)
 
 
 if __name__ == "__main__":

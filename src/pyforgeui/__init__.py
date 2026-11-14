@@ -1,10 +1,11 @@
 """PyForgeUI - Modular and Scalable GUI Library for Pygame."""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Drakonosinc"
 
 from .Elements_Factory import ElementsFactory
 from .UI_Manager import UIManager
+from .VisualFX import RetroVisualFX, RetroBackdrop
 from .Elements import (
     Text,
     TextButton,
@@ -47,6 +48,8 @@ __all__ = [
     "__version__",
     "ElementsFactory",
     "UIManager",
+    "RetroVisualFX",
+    "RetroBackdrop",
     "Text",
     "TextButton",
     "PolygonButton",

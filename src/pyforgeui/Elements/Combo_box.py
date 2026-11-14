@@ -1,5 +1,6 @@
 import pygame
 from ..Behavior.Mouse_collision import MouseCollision
+from ..VisualFX import RetroVisualFX
 from .Text_button import TextButton
 from .Scroll_bar import ScrollBar
 
@@ -14,7 +15,7 @@ class ComboBox(TextButton):
         from ..Elements_Factory import ElementsFactory
         self.type_dropdown: str = self.get_icon()
         self.dropdown: list[int] = config.get("size", [self.font.size(self.text)[0] + self.font.size(self.type_dropdown)[0], 100])
-        self.hover_dropdown: tuple[int, int, int] = config.get("hover_dropdown", (135, 206, 235))
+        self.hover_dropdown: tuple[int, int, int] = config.get("hover_dropdown", (56, 189, 248))
         self.replace_text: bool = config.get("replace_text", False)
         self.close_on_select: bool = config.get("close_on_select", True)
         self.adapt_dropdown: bool = config.get("adapt_dropdown", True)
@@ -24,7 +25,7 @@ class ComboBox(TextButton):
         self.options: list[str] = []
         self.option_buttons: dict = {}
         self._last_layout_rect: pygame.Rect | None = None
-        self.padding_x: int = config.get("padding_x", 6)
+        self.padding_x: int = config.get("padding_x", 8)
         self.padding_y: int = config.get("padding_y", 6)
         self.item_spacing: int = config.get("item_spacing", 6)
 
@@ -40,6 +41,7 @@ class ComboBox(TextButton):
         self.button_dropdown = self.factory.create_TextButton({
             "position": (self.position[0] + self.font.size(self.text)[0], int(self.position[1])),
             "text": self.type_dropdown,
+            "hover_bg": False,
             "command1": self.toggle_dropdown,
             "command2": self.command_dropdown if callable(self.command_dropdown) else None,
         })
@@ -48,11 +50,26 @@ class ComboBox(TextButton):
             self.commands = [self.toggle_dropdown]
             if callable(self.command_dropdown):
                 self.commands.append(self.command_dropdown)
-        self._combo_hover_surface = self.font.render(f"{self.text}{self.type_dropdown}", True, self.hover_color)
+        self._update_combo_hover_surface()
         self.rect: dict[str, object] = {
             "button": pygame.Rect(*self.position, *self.font.size(self.text)),
             "dropdown": self.button_dropdown,
         }
+
+    def _update_combo_hover_surface(self) -> None:
+        if getattr(self, "modern_style", True) and hasattr(self, "type_dropdown"):
+            self._combo_hover_surface, self._combo_hover_pad, _, _ = RetroVisualFX.render_text_styled(
+                self.font,
+                f"{self.text}{self.type_dropdown}",
+                self.hover_color,
+                shadow=True,
+                glow=True,
+                glow_color=self.hover_color,
+                glow_radius=4,
+            )
+        elif hasattr(self, "type_dropdown"):
+            self._combo_hover_surface = self.font.render(f"{self.text}{self.type_dropdown}", True, self.hover_color)
+            self._combo_hover_pad = (0, 0)
 
     @property
     def is_dropdown_open(self) -> bool:
@@ -122,14 +139,16 @@ class ComboBox(TextButton):
         return pygame.Rect(int(self.position[0]), int(self.position[1] + self.font.get_height()), int(self.dropdown[0]), int(self.dropdown[1]))
 
     def _update_surfaces(self) -> None:
-        self._text_surface = self.font.render(self.text, True, self.color)
-        self._hover_surface = self.font.render(self.text, True, self.hover_color)
-        if hasattr(self, "type_dropdown"):
-            self._combo_hover_surface = self.font.render(f"{self.text}{self.type_dropdown}", True, self.hover_color)
-        if hasattr(self, "rect") and isinstance(self.rect, dict):
-            self.rect["button"] = pygame.Rect(*self.position, *self._text_surface.get_size())
+        prev_rect = getattr(self, "rect", None)
+        super()._update_surfaces()
+        self._update_combo_hover_surface()
+        bw, bh = self.font.size(self.text)
+        btn_rect = pygame.Rect(int(self.position[0]), int(self.position[1]), bw, bh)
+        if isinstance(prev_rect, dict):
+            prev_rect["button"] = btn_rect
+            self.rect = prev_rect
         else:
-            self.rect = pygame.Rect(*self.position, *self._text_surface.get_size())
+            self.rect = btn_rect
 
     def move(self, dx: int, dy: int) -> None:
         if dx == 0 and dy == 0:
@@ -172,7 +191,7 @@ class ComboBox(TextButton):
                 "position": (self.position[0] + self.dropdown[0], self.position[1] + self.font.get_height(), 20, self.dropdown[1]),
                 "type_of_orientation": "vertical",
                 "thumb_height": 20,
-                "color_bar": (135, 206, 235),
+                "color_bar": (56, 189, 248),
             })
         else:
             self.scroll = self.factory.create_ScrollBar({
@@ -184,17 +203,36 @@ class ComboBox(TextButton):
                 ),
                 "type_of_orientation": "horizontal",
                 "thumb_width": 20,
-                "color_bar": (135, 206, 235),
+                "color_bar": (56, 189, 248),
             })
 
         self.scroll._owner_popup = self
 
     def draw(self) -> None:
-        if self._is_visual_occluded_by_popup(self.get_header_rect()):
+        header_rect = self.get_header_rect()
+        if self._is_visual_occluded_by_popup(header_rect):
             self.states["is_hovered"] = False
             self.states["active"] = False
             return
-        self.screen.blit(self._text_surface, self.position)
+
+        mouse_pos = self.get_mouse_pos()
+        is_header_hovered = (
+            self.detect_mouse
+            and not self._is_occluded_by_popup(header_rect, mouse_pos)
+            and header_rect.collidepoint(mouse_pos)
+        )
+        if getattr(self, "modern_style", True) and (is_header_hovered or self.is_dropdown_open):
+            RetroVisualFX.draw_hover_pill(
+                self.screen,
+                header_rect,
+                progress=1.0 if is_header_hovered else 0.7,
+                hover_color=self.hover_color,
+                accent_color=self.hover_dropdown,
+                compact=True,
+                is_selected=self.is_dropdown_open,
+            )
+
+        self._blit_normal()
         self.button_dropdown.draw()
         if self.is_dropdown_open:
             try:
@@ -203,7 +241,6 @@ class ComboBox(TextButton):
                 pass
             if MouseCollision._active_popup is not self:
                 MouseCollision.set_active_popup(self)
-            mouse_pos = self.get_mouse_pos()
             pressed_mouse = pygame.mouse.get_pressed()
             if (
                 pressed_mouse[0]
@@ -215,14 +252,15 @@ class ComboBox(TextButton):
                 self.draw_rect_dropdown()
         else:
             self.anim_height_dropdown = 0
-            self.button_dropdown.change_item({"color": self.color})
+            self.button_dropdown.change_item({"color": (56, 189, 248) if getattr(self, "modern_style", True) else self.color})
         if self.detect_mouse:
-            self.mouse_collision(self.rect["button"], self.get_mouse_pos(), self.draw_hover_effect)
+            self.mouse_collision(self.rect["button"], mouse_pos, self.draw_hover_effect)
         if self.pressed:
-            self.pressed_button(self.rect["button"], pygame.mouse.get_pressed(), self.get_mouse_pos())
+            self.pressed_button(self.rect["button"], pygame.mouse.get_pressed(), mouse_pos)
 
     def draw_hover_effect(self) -> pygame.Rect:
-        return self.screen.blit(self._combo_hover_surface, self.position)
+        hx, hy = getattr(self, "_combo_hover_pad", (0, 0))
+        return self.screen.blit(self._combo_hover_surface, (self.position[0] - hx, self.position[1] - hy))
 
     def _visible_buttons(self) -> list:
         if self.replace_text:
@@ -230,16 +268,41 @@ class ComboBox(TextButton):
         return list(self.option_buttons.values())
 
     def draw_rect_dropdown(self) -> None:
-        self.button_dropdown.change_item({"color": self.hover_dropdown})
+        self.button_dropdown.change_item({"color": self.hover_color if getattr(self, "modern_style", True) else self.hover_dropdown})
         if self.adapt_dropdown and self.option_buttons:
             self._adapt_size_dropdown()
         self.dropdown_rect = self._get_rect_dropdown()
-        pygame.draw.rect(self.screen, self.hover_dropdown, self.dropdown_rect)
-        pygame.draw.rect(self.screen, self.color, self.dropdown_rect, 2)
+
+        if getattr(self, "modern_style", True):
+            RetroVisualFX.draw_hud_frame(
+                self.screen,
+                self.dropdown_rect,
+                accent_color=self.hover_dropdown,
+                bg_color=(10, 16, 34),
+                bg_alpha=244,
+                border_radius=6,
+                corner_size=8,
+                glow=True,
+            )
+        else:
+            pygame.draw.rect(self.screen, self.hover_dropdown, self.dropdown_rect)
+            pygame.draw.rect(self.screen, self.color, self.dropdown_rect, 2)
+
         if self.draw_scroll and self.option_buttons:
             self._rebuild_scroll()
-        for button in self._visible_buttons():
+        vis = self._visible_buttons()
+        for idx, button in enumerate(vis):
             self._draw_option_buttons(button)
+            if getattr(self, "modern_style", True) and self.is_vertical() and idx < len(vis) - 1 and self._is_button_visible(button):
+                sep_y = button.rect.bottom + self.item_spacing // 2
+                if self.dropdown_rect.top + 4 < sep_y < self.dropdown_rect.bottom - 4:
+                    pygame.draw.line(
+                        self.screen,
+                        (40, 68, 110),
+                        (self.dropdown_rect.left + 6, sep_y),
+                        (self.dropdown_rect.right - 6, sep_y),
+                        1,
+                    )
         if hasattr(self, "scroll") and self._needs_scroll():
             self._draw_scroll()
 
@@ -276,7 +339,6 @@ class ComboBox(TextButton):
         self.rect["scroll"] = self.scroll.rect
         self.scroll.update_elements(self._visible_buttons())
         self.draw_scroll = False
-
 
     def _on_option_clicked(self, index: int) -> None:
         if self.replace_text:
@@ -358,7 +420,7 @@ class ComboBoxDown(ComboBox):
 
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[1]:
-            self.anim_height_dropdown = min(self.dropdown[1], self.anim_height_dropdown + max(1, self.dropdown[1] // 15))
+            self.anim_height_dropdown = min(self.dropdown[1], self.anim_height_dropdown + max(1, self.dropdown[1] // 10))
         return pygame.Rect(self.position[0], self.position[1] + self.font.get_height(), self.dropdown[0], self.anim_height_dropdown)
 
     def _adapt_size_dropdown(self) -> None:
@@ -397,7 +459,7 @@ class ComboBoxUp(ComboBox):
 
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[1]:
-            self.anim_height_dropdown = min(self.dropdown[1], self.anim_height_dropdown + max(1, self.dropdown[1] // 15))
+            self.anim_height_dropdown = min(self.dropdown[1], self.anim_height_dropdown + max(1, self.dropdown[1] // 10))
         return pygame.Rect(self.position[0], self.position[1] - self.anim_height_dropdown, self.dropdown[0], self.anim_height_dropdown)
 
     def _adapt_size_dropdown(self) -> None:
@@ -441,7 +503,7 @@ class ComboBoxRight(ComboBox):
 
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[0]:
-            self.anim_height_dropdown = min(self.dropdown[0], self.anim_height_dropdown + max(1, self.dropdown[0] // 15))
+            self.anim_height_dropdown = min(self.dropdown[0], self.anim_height_dropdown + max(1, self.dropdown[0] // 10))
         return pygame.Rect(self._dropdown_start_x(), self._dropdown_top_y(), self.anim_height_dropdown, self.dropdown[1])
 
     def _adapt_size_dropdown(self) -> None:
@@ -484,7 +546,7 @@ class ComboBoxLeft(ComboBox):
 
     def _get_rect_dropdown(self) -> pygame.Rect:
         if self.anim_height_dropdown < self.dropdown[0]:
-            self.anim_height_dropdown = min(self.dropdown[0], self.anim_height_dropdown + max(1, self.dropdown[0] // 15))
+            self.anim_height_dropdown = min(self.dropdown[0], self.anim_height_dropdown + max(1, self.dropdown[0] // 10))
         return pygame.Rect(self.position[0] - self.anim_height_dropdown - 4, self._dropdown_top_y(), self.anim_height_dropdown, self.dropdown[1])
 
     def _adapt_size_dropdown(self) -> None:
