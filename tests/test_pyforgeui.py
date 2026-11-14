@@ -194,6 +194,32 @@ class TestPyForgeUI(unittest.TestCase):
         stepper.draw()
         backdrop.draw_post_overlay(self.screen)
 
+    def test_repeat_button_single_click_and_hold(self) -> None:
+        counter = [5]
+        btn_inc = self.factory.create_PolygonButton({
+            "color": (0, 0, 0),
+            "position": ((380, 185), (380, 205), (400, 195)),
+            "position2": ((380, 181), (380, 209), (406, 195)),
+            "color2": (255, 255, 255),
+            "repeat_button": True,
+            "command1": lambda: counter.__setitem__(0, counter[0] + 1),
+        })
+        pos = (390, 195)
+        # Single click (press then release)
+        btn_inc.pressed_button(btn_inc.rect, (True, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
+        self.assertEqual(counter[0], 6)
+        btn_inc.pressed_button(btn_inc.rect, (False, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
+        self.assertEqual(counter[0], 6)
+
+        # Second single click
+        btn_inc.pressed_button(btn_inc.rect, (True, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
+        self.assertEqual(counter[0], 7)
+        # Simulate holding past repeat_interval
+        btn_inc.states["click_time"] -= 250
+        btn_inc.pressed_button(btn_inc.rect, (True, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
+        self.assertEqual(counter[0], 8)
+        btn_inc.pressed_button(btn_inc.rect, (False, False, False), pos, draw=lambda: None, repeat=btn_inc.repeat)
+
 
 if __name__ == "__main__":
     unittest.main()

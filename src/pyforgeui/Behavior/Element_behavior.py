@@ -19,7 +19,7 @@ class ElementBehavior(MouseCollision, PressedButton):
         return False
 
     def reactivate_pressed(self, event: pygame.event.Event) -> None:
-        if event.type == self.EVENT_NEW:
+        if event.type == self.EVENT_NEW and not self.states.get("active", False):
             self.states["presses_touch"] = True
 
     def new_events(self, time: int) -> None:

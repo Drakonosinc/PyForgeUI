@@ -12,7 +12,15 @@ class PolygonButton(ElementBehavior):
         self.hover_color = config.get("hover_color", (255, 199, 51))
         self.modern_style: bool = config.get("modern_style", True)
         self._hover_anim: float = 0.0
-        self.rect = pygame.draw.polygon(self.screen, self.color, self.position).copy()
+        base_rect = pygame.draw.polygon(self.screen, self.color, self.position).copy()
+        if self.hover_position and len(self.hover_position) >= 3:
+            min_x = int(min(p[0] for p in (*self.position, *self.hover_position)))
+            max_x = int(max(p[0] for p in (*self.position, *self.hover_position)))
+            min_y = int(min(p[1] for p in (*self.position, *self.hover_position)))
+            max_y = int(max(p[1] for p in (*self.position, *self.hover_position)))
+            self.rect = pygame.Rect(min_x, min_y, max(1, max_x - min_x + 1), max(1, max_y - min_y + 1))
+        else:
+            self.rect = base_rect
 
     def _get_interpolated_points(self, t: float) -> list[tuple[float, float]]:
         if t <= 0.01 or not self.hover_position or len(self.hover_position) != len(self.position):

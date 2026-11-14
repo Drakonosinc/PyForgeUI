@@ -73,6 +73,8 @@ class RetroVisualFX:
 
         cache_key = (
             id(font),
+            font.get_height(),
+            font.get_linesize(),
             text,
             rgb,
             shadow,
