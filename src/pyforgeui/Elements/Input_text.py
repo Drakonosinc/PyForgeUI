@@ -22,12 +22,16 @@ class InputText(ElementBehavior):
     def events(self, event):
         self.change_text(event)
     def draw(self):
+        if not getattr(self, "visible", True) or self._is_visual_occluded_by_popup(self.rect):
+            return
         pygame.draw.rect(self.screen,self.color_back,self.rect)
         if self.detect_mouse:self.mouse_collision(self.rect,self.get_mouse_pos())
         if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),self.get_mouse_pos())
         input_player=pygame.draw.rect(self.screen,self.border_color,self.rect,self.border)
         self.screen.blit(self._text_surface, (input_player.x+5, input_player.y-2))
     def pressed_button(self, rect, pressed_mouse, mouse_pos, draw=None, repeat: bool = None):
+        if not getattr(self, "visible", True) or not getattr(self, "enabled", True) or self._is_occluded_by_popup(rect, mouse_pos):
+            return False
         if pressed_mouse[0] and self.states["presses_touch"]:
             if rect.collidepoint(mouse_pos):
                 self.states["active"] = True

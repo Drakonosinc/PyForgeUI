@@ -13,6 +13,8 @@ class Text(MouseCollision):
         self._hover_surface = self.font.render(self.text, True, self.hover_color)
         self.rect = pygame.Rect(*self.position, *self._text_surface.get_size())
     def draw(self):
+        if not getattr(self, "visible", True):
+            return
         if self._is_visual_occluded_by_popup(self.rect if isinstance(self.rect, pygame.Rect) else None):
             self.states["is_hovered"] = False
             if "active" in self.states:

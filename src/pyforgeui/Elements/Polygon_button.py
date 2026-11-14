@@ -8,6 +8,8 @@ class PolygonButton(ElementBehavior):
         self.hover_color = config.get("hover_color", (255, 199, 51))
         self.rect = pygame.draw.polygon(self.screen, self.color, self.position).copy()
     def draw(self):
+        if not getattr(self, "visible", True) or self._is_visual_occluded_by_popup(self.rect):
+            return
         pygame.draw.polygon(self.screen, self.color, self.position)
         if self.detect_mouse:self.mouse_collision(self.rect,self.get_mouse_pos())
         if self.pressed:self.pressed_button(self.rect,pygame.mouse.get_pressed(),self.get_mouse_pos())

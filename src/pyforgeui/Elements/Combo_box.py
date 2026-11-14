@@ -272,8 +272,7 @@ class ComboBox(TextButton):
 
     def _rebuild_scroll(self) -> None:
         self._create_scroll()
-        if hasattr(self, "dropdown_rect") and isinstance(self.dropdown_rect, pygame.Rect):
-            self.scroll.scroll_area = self.dropdown_rect
+        self.scroll.scroll_area = self._get_target_dropdown_rect()
         self.rect["scroll"] = self.scroll.rect
         self.scroll.update_elements(self._visible_buttons())
         self.draw_scroll = False
