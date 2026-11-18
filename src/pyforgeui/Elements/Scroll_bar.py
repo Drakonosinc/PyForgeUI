@@ -242,6 +242,8 @@ class ScrollBar(ElementBehavior):
         return pygame.draw.rect(self.screen, self.hover_color, self.thumb_rect)
 
     def update_elements(self, elements: list):
+        if self.elements == elements and self.initial_positions and len(self.initial_positions) == len(elements):
+            return
         self.elements = elements
         self.initial_positions = [(el.position[0], el.position[1]) for el in self.elements]
         if self.elements:

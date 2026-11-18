@@ -521,10 +521,12 @@ class RetroVisualFX:
         pulse_color=(255, 199, 51),
         opacity: int = 120,
         show_frame: bool = True,
+        max_visible_neurons: int = 8,
     ) -> None:
         """
         Draws a translucent, adaptive live neural network topology with real-time per-neuron
         activations, glowing square scanlined nodes, circular neon halos, and active synapse pulses.
+        Automatically pools layers larger than `max_visible_neurons` into representative neuron banks.
         """
         r = pygame.Rect(rect) if not isinstance(rect, pygame.Rect) else rect
         if r.width <= 20 or r.height <= 20 or not layers_sizes or len(layers_sizes) < 2:
@@ -568,13 +570,14 @@ class RetroVisualFX:
         acts_per_layer: list[list[float]] = []
 
         for l_idx, raw_n in enumerate(layers_sizes):
-            n_neurons = max(1, int(raw_n))
-            y_gap = (bottom - top) / (n_neurons + 1)
-            node_half = max(4, min(9, int(y_gap * 0.34)))
+            actual_n = max(1, int(raw_n))
+            vis_n = min(actual_n, max(2, int(max_visible_neurons)))
+            y_gap = (bottom - top) / (vis_n + 1)
+            node_half = max(5, min(9, int(y_gap * 0.34)))
             layer_node_sizes.append(node_half)
             centers = [
                 (x_positions[l_idx], int(top + (i + 1) * y_gap))
-                for i in range(n_neurons)
+                for i in range(vis_n)
             ]
             layer_centers.append(centers)
 
@@ -584,16 +587,25 @@ class RetroVisualFX:
 
             layer_vals: list[float] = []
             if raw_acts is not None and len(raw_acts) > 0:
-                for i in range(n_neurons):
-                    if i < len(raw_acts):
+                n_raw = len(raw_acts)
+                for i in range(vis_n):
+                    if n_raw > vis_n:
+                        s_idx = int(i * n_raw / vis_n)
+                        e_idx = max(s_idx + 1, int((i + 1) * n_raw / vis_n))
+                        chunk = [
+                            0.0 if (math.isnan(float(x)) or math.isinf(float(x))) else float(x)
+                            for x in raw_acts[s_idx:e_idx]
+                        ]
+                        val = (max(chunk) * 0.65 + (sum(chunk) / len(chunk)) * 0.35) if chunk else 0.0
+                    elif i < n_raw:
                         val = float(raw_acts[i])
                         if math.isnan(val) or math.isinf(val):
                             val = 0.0
-                        layer_vals.append(max(0.0, min(1.0, val)))
                     else:
-                        layer_vals.append(0.2)
+                        val = 0.2
+                    layer_vals.append(max(0.0, min(1.0, val)))
             else:
-                for i in range(n_neurons):
+                for i in range(vis_n):
                     wave = 0.35 + 0.25 * math.sin(ticks * 0.003 + l_idx * 0.8 + i * 0.6)
                     layer_vals.append(max(0.0, min(1.0, wave)))
             acts_per_layer.append(layer_vals)
